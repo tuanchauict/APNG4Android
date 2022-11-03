@@ -300,11 +300,7 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, 
     public int getMemorySize() {
         int size = frameSeqDecoder.getMemorySize();
         if (bitmap != null && !bitmap.isRecycled()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                size += bitmap.getAllocationByteCount();
-            } else {
-                size += bitmap.getByteCount();
-            }
+            size += bitmap.getAllocationByteCount();
         }
         return Math.max(1, size);
     }

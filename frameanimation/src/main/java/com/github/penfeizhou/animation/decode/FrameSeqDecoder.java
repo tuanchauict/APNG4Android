@@ -97,33 +97,29 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
 
     protected abstract R getReader(Reader reader);
 
+    /**
+     * Obtains a bitmap with size width and height.
+     * <p>
+     * First, try to reuse a bitmap from the pool. If no bitmap in the pool has the size match width
+     * and height, create a new bitmap with the size of width x height
+     *
+     * @param width
+     * @param height
+     * @return
+     */
     protected Bitmap obtainBitmap(int width, int height) {
         synchronized (cacheBitmapsLock) {
-            Bitmap ret = null;
+            Bitmap bitmap = null;
             Iterator<Bitmap> iterator = cacheBitmaps.iterator();
+            int reuseSize = width * height * 4;
             while (iterator.hasNext()) {
-                int reuseSize = width * height * 4;
-                ret = iterator.next();
+                bitmap = iterator.next();
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    if (ret != null && ret.getAllocationByteCount() >= reuseSize) {
-                        iterator.remove();
-                        if ((ret.getWidth() != width || ret.getHeight() != height)) {
-                            if (width > 0 && height > 0) {
-                                ret.reconfigure(width, height, Bitmap.Config.ARGB_8888);
-                            }
-                        }
-                        ret.eraseColor(0);
-                        return ret;
-                    }
-                } else {
-                    if (ret != null && ret.getByteCount() >= reuseSize) {
-                        if (ret.getWidth() == width && ret.getHeight() == height) {
-                            iterator.remove();
-                            ret.eraseColor(0);
-                        }
-                        return ret;
-                    }
+                if (bitmap != null && bitmap.getAllocationByteCount() >= reuseSize) {
+                    reconfigureBitmapIfNeed(bitmap, width, height);
+                    bitmap.eraseColor(0);
+                    iterator.remove();
+                    return bitmap;
                 }
             }
 
@@ -132,13 +128,19 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
             }
             try {
                 Bitmap.Config config = Bitmap.Config.ARGB_8888;
-                ret = Bitmap.createBitmap(width, height, config);
-            } catch (Exception e) {
-                e.printStackTrace();
-            } catch (OutOfMemoryError e) {
+                bitmap = Bitmap.createBitmap(width, height, config);
+            } catch (Exception | OutOfMemoryError e) {
                 e.printStackTrace();
             }
-            return ret;
+            return bitmap;
+        }
+    }
+
+    private void reconfigureBitmapIfNeed(Bitmap bitmap, int width, int height) {
+        if (bitmap.getWidth() != width || bitmap.getHeight() != height) {
+            if (width > 0 && height > 0) {
+                bitmap.reconfigure(width, height, Bitmap.Config.ARGB_8888);
+            }
         }
     }
 
@@ -151,29 +153,29 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
     }
 
     /**
-     * 解码器的渲染回调
+     * Rendering callbacks for decoders
      */
     public interface RenderListener {
         /**
-         * 播放开始
+         * Playback starts
          */
         void onStart();
 
         /**
-         * 帧播放
+         * Frame Playback
          */
         void onRender(ByteBuffer byteBuffer);
 
         /**
-         * 播放结束
+         * End of Playback
          */
         void onEnd();
     }
 
 
     /**
-     * @param loader         webp的reader
-     * @param renderListener 渲染的回调
+     * @param loader         webp-like reader
+     * @param renderListener Callbacks for rendering
      */
     public FrameSeqDecoder(Loader loader, @Nullable RenderListener renderListener) {
         this.mLoader = loader;
@@ -570,11 +572,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
                 if (bitmap.isRecycled()) {
                     continue;
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    size += bitmap.getAllocationByteCount();
-                } else {
-                    size += bitmap.getByteCount();
-                }
+                size += bitmap.getAllocationByteCount();
             }
             if (frameBuffer != null) {
                 size += frameBuffer.capacity();
