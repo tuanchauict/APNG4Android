@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     compileSdkVersion project.ext.targetSdkVersion
@@ -28,9 +29,10 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     api("com.github.penfeizhou.android.animation:awebp:${rootProject.ext.Version}")
     api("com.github.penfeizhou.android.animation:gif:${rootProject.ext.Version}")
+    implementation 'androidx.core:core-ktx:1.9.0'
 
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }
-apply from: rootProject.file('scripts/upload.gradle')
+//apply from: rootProject.file('scripts/upload.gradle')
