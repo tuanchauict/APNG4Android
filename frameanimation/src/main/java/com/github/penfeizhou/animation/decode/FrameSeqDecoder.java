@@ -3,10 +3,12 @@ package com.github.penfeizhou.animation.decode;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor;
 import com.github.penfeizhou.animation.io.Reader;
@@ -24,9 +26,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 
 /**
  * @Description: Abstract Frame Animation Decoder
@@ -188,30 +187,17 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
 
 
     public void addRenderListener(final RenderListener renderListener) {
-        this.workerHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                renderListeners.add(renderListener);
-            }
-        });
+        this.workerHandler.post(() -> renderListeners.add(renderListener));
     }
 
     public void removeRenderListener(final RenderListener renderListener) {
-        this.workerHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                renderListeners.remove(renderListener);
-            }
-        });
+        this.workerHandler.post(() -> renderListeners.remove(renderListener));
     }
 
     public void stopIfNeeded() {
-        this.workerHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (renderListeners.size() == 0) {
-                    stop();
-                }
+        this.workerHandler.post(() -> {
+            if (renderListeners.size() == 0) {
+                stop();
             }
         });
     }
@@ -222,24 +208,21 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
                 Log.e(TAG, "In finishing,do not interrupt");
             }
             final Thread thread = Thread.currentThread();
-            workerHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (fullRect == null) {
-                            if (mReader == null) {
-                                mReader = getReader(mLoader.obtain());
-                            } else {
-                                mReader.reset();
-                            }
-                            initCanvasBounds(read(mReader));
+            workerHandler.post(() -> {
+                try {
+                    if (fullRect == null) {
+                        if (mReader == null) {
+                            mReader = getReader(mLoader.obtain());
+                        } else {
+                            mReader.reset();
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        fullRect = RECT_EMPTY;
-                    } finally {
-                        LockSupport.unpark(thread);
+                        initCanvasBounds(read(mReader));
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fullRect = RECT_EMPTY;
+                } finally {
+                    LockSupport.unpark(thread);
                 }
             });
             LockSupport.park(thread);
@@ -283,12 +266,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
         if (Looper.myLooper() == workerHandler.getLooper()) {
             innerStart();
         } else {
-            workerHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    innerStart();
-                }
-            });
+            workerHandler.post(this::innerStart);
         }
     }
 
@@ -380,12 +358,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
         if (Looper.myLooper() == workerHandler.getLooper()) {
             innerStop();
         } else {
-            workerHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    innerStop();
-                }
-            });
+            workerHandler.post(this::innerStop);
         }
     }
 
@@ -411,13 +384,10 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
     }
 
     public void reset() {
-        workerHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                playCount = 0;
-                frameIndex = -1;
-                finished = false;
-            }
+        workerHandler.post(() -> {
+            playCount = 0;
+            frameIndex = -1;
+            finished = false;
         });
     }
 
@@ -444,19 +414,16 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
             sampleSizeChanged = true;
             final boolean tempRunning = isRunning();
             workerHandler.removeCallbacks(renderTask);
-            workerHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    innerStop();
-                    try {
-                        sampleSize = sample;
-                        initCanvasBounds(read(getReader(mLoader.obtain())));
-                        if (tempRunning) {
-                            innerStart();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            workerHandler.post(() -> {
+                innerStop();
+                try {
+                    sampleSize = sample;
+                    initCanvasBounds(read(getReader(mLoader.obtain())));
+                    if (tempRunning) {
+                        innerStart();
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             });
         }
