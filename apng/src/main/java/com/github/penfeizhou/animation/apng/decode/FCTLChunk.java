@@ -73,17 +73,17 @@ class FCTLChunk extends Chunk {
     /**
      * No disposal is done on this frame before rendering the next; the contents of the output buffer are left as is.
      */
-    static final int APNG_DISPOSE_OP_NON = 0;
+    static final byte APNG_DISPOSE_OP_NON = 0;
 
     /**
      * The frame's region of the output buffer is to be cleared to fully transparent black before rendering the next frame.
      */
-    static final int APNG_DISPOSE_OP_BACKGROUND = 1;
+    static final byte APNG_DISPOSE_OP_BACKGROUND = 1;
 
     /**
      * The frame's region of the output buffer is to be reverted to the previous contents before rendering the next frame.
      */
-    static final int APNG_DISPOSE_OP_PREVIOUS = 2;
+    static final byte APNG_DISPOSE_OP_PREVIOUS = 2;
 
     /**
      * blend_op<code> specifies whether the frame is to be alpha blended into the current output buffer content,
@@ -92,7 +92,7 @@ class FCTLChunk extends Chunk {
     /**
      * All color components of the frame, including alpha, overwrite the current contents of the frame's output buffer region.
      */
-    static final int APNG_BLEND_OP_SOURCE = 0;
+    static final byte APNG_BLEND_OP_SOURCE = 0;
 
     /**
      * The frame should be composited onto the output buffer based on its alpha,
