@@ -37,6 +37,11 @@ allprojects {
             }
         }
     }
+
+    ext {
+        minSdkVersion = 21
+        targetSdkVersion = 31
+    }
 }
 
 task clean(type: Delete) {
