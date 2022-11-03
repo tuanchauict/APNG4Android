@@ -39,7 +39,7 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.2.0'
     api("com.github.penfeizhou.android.animation:frameanimation:${rootProject.ext.Version}")
-    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.6.0'
 
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
