@@ -98,7 +98,7 @@ public class APNGDecoder extends FrameSeqDecoder<APNGReader, APNGWriter> {
                 }
             } else if (chunk instanceof IDATChunk) {
                 if (!actl) {
-                    //如果为非APNG图片，则只解码PNG
+                    // If it is a non-APNG image, only PNG will be decoded
                     Frame<APNGReader, APNGWriter> frame = new StillFrame(reader);
                     frame.frameWidth = canvasWidth;
                     frame.frameHeight = canvasHeight;
@@ -136,26 +136,26 @@ public class APNGDecoder extends FrameSeqDecoder<APNGReader, APNGWriter> {
                 cachedCanvas.put(bitmap, canvas);
             }
             if (frame instanceof APNGFrame) {
-                // 从缓存中恢复当前帧
+                // Restore the current frame from the cache
                 frameBuffer.rewind();
                 bitmap.copyPixelsFromBuffer(frameBuffer);
-                // 开始绘制前，处理快照中的设定
+                // Process the settings in the snapshot before starting to draw
                 if (this.frameIndex == 0) {
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
                 } else {
                     canvas.save();
                     canvas.clipRect(snapShot.dstRect);
                     switch (snapShot.dispose_op) {
-                        // 从快照中恢复上一帧之前的显示内容
+                        // Restore the display from the snapshot before the last frame
                         case FCTLChunk.APNG_DISPOSE_OP_PREVIOUS:
                             snapShot.byteBuffer.rewind();
                             bitmap.copyPixelsFromBuffer(snapShot.byteBuffer);
                             break;
-                        // 清空上一帧所画区域
+                        // Clear the area drawn in the previous frame
                         case FCTLChunk.APNG_DISPOSE_OP_BACKGROUND:
                             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
                             break;
-                        // 什么都不做
+                        // Do nothing
                         case FCTLChunk.APNG_DISPOSE_OP_NON:
                         default:
                             break;
@@ -163,7 +163,7 @@ public class APNGDecoder extends FrameSeqDecoder<APNGReader, APNGWriter> {
                     canvas.restore();
                 }
 
-                // 然后根据dispose设定传递到快照信息中
+                // Then pass it to the snapshot information according to the dispose setting
                 if (((APNGFrame) frame).dispose_op == FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
                     if (snapShot.dispose_op != FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
                         snapShot.byteBuffer.rewind();
@@ -189,7 +189,7 @@ public class APNGDecoder extends FrameSeqDecoder<APNGReader, APNGWriter> {
                         (frame.frameY + frame.frameHeight) / sampleSize);
                 canvas.restore();
             }
-            //开始真正绘制当前帧的内容
+            // Start actually drawing the content of the current frame
             Bitmap inBitmap = obtainBitmap(frame.frameWidth, frame.frameHeight);
             recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, getWriter()));
             recycleBitmap(inBitmap);
