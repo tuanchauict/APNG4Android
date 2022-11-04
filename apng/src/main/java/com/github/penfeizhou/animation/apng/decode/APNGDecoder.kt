@@ -60,7 +60,7 @@ class APNGDecoder(
     @Throws(IOException::class)
     override fun read(reader: APNGReader): Rect {
         val chunks = APNGParser.parse(reader)
-        val otherChunks: MutableList<Chunk> = ArrayList()
+        val otherChunks = mutableListOf<Chunk>()
         var actl = false
         var lastFrame: APNGFrame? = null
         var ihdrData: ByteArray? = ByteArray(0)
@@ -73,9 +73,10 @@ class APNGDecoder(
                     actl = true
                 }
                 is FCTLChunk -> {
-                    val frame = APNGFrame(reader, chunk)
-                    frame.prefixChunks = otherChunks
-                    frame.ihdrData = ihdrData
+                    val frame = APNGFrame(reader, chunk).also {
+                        it.prefixChunks = otherChunks
+                        it.ihdrData = ihdrData
+                    }
                     frames.add(frame)
                     lastFrame = frame
                 }
@@ -84,9 +85,10 @@ class APNGDecoder(
                 is IDATChunk -> {
                     if (!actl) {
                         // If it is a non-APNG image, only PNG will be decoded
-                        val frame = StillFrame(reader)
-                        frame.frameWidth = canvasWidth
-                        frame.frameHeight = canvasHeight
+                        val frame = StillFrame(reader).apply {
+                            frameWidth = canvasWidth
+                            frameHeight = canvasHeight
+                        }
                         frames.add(frame)
                         mLoopCount = 1
                         break
@@ -98,14 +100,13 @@ class APNGDecoder(
                     canvasHeight = chunk.height
                     ihdrData = chunk.data
                 }
-                !is IENDChunk ->
-                    otherChunks.add(chunk)
+                is IENDChunk -> Unit
+                is Chunk -> otherChunks.add(chunk)
             }
         }
-        frameBuffer =
-            ByteBuffer.allocate((canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4)
-        snapShot.byteBuffer =
-            ByteBuffer.allocate((canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4)
+        val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
+        frameBuffer = ByteBuffer.allocate(bufferSizeBytes)
+        snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
@@ -132,15 +133,12 @@ class APNGDecoder(
                     canvas.clipRect(snapShot.dstRect)
                     when (snapShot.disposeOp) {
                         FCTLChunk.APNG_DISPOSE_OP_PREVIOUS -> {
-                            snapShot.byteBuffer!!.rewind()
+                            snapShot.byteBuffer?.rewind()
                             bitmap.copyPixelsFromBuffer(snapShot.byteBuffer)
                         }
-                        FCTLChunk.APNG_DISPOSE_OP_BACKGROUND -> canvas.drawColor(
-                            Color.TRANSPARENT,
-                            PorterDuff.Mode.CLEAR
-                        )
-                        FCTLChunk.APNG_DISPOSE_OP_NON -> {}
-                        else -> {}
+                        FCTLChunk.APNG_DISPOSE_OP_BACKGROUND ->
+                            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                        FCTLChunk.APNG_DISPOSE_OP_NON -> Unit
                     }
                     canvas.restore()
                 }
@@ -148,7 +146,7 @@ class APNGDecoder(
                 // Then pass it to the snapshot information according to the dispose setting
                 if (frame.dispose_op == FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
                     if (snapShot.disposeOp != FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
-                        snapShot.byteBuffer!!.rewind()
+                        snapShot.byteBuffer?.rewind()
                         bitmap.copyPixelsToBuffer(snapShot.byteBuffer)
                     }
                 }
