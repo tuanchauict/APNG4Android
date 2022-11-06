@@ -10,8 +10,6 @@ internal class BitmapReaderManager<R : Reader>(
 ) {
     private var reader: R? = null
 
-    fun getNewReader(): R = readerFactory(loader.obtain())
-
     @Throws(IOException::class)
     fun getReader(): R {
         val localReader = reader
@@ -19,7 +17,7 @@ internal class BitmapReaderManager<R : Reader>(
             localReader.reset()
             return localReader
         }
-        reader = getNewReader()
+        reader = readerFactory(loader.obtain())
         return getReader()
     }
 

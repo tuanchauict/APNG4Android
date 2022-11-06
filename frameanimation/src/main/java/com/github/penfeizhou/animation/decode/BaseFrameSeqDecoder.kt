@@ -136,13 +136,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected fun closeReader() = bitmapReaderManager.closeReader()
 
     @Throws(IOException::class)
-    @JvmOverloads
-    protected fun read(withNewReader: Boolean = false): Rect =
-        if (withNewReader) {
-            read(bitmapReaderManager.getNewReader())
-        } else {
-            read(bitmapReaderManager.getReader())
-        }
+    protected fun read(): Rect = read(bitmapReaderManager.getReader())
 
     @Throws(IOException::class)
     protected abstract fun read(reader: R): Rect

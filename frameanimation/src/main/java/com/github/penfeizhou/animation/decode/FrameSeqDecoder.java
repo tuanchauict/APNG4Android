@@ -238,7 +238,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
                 innerStop();
                 try {
                     sampleSize = sample;
-                    initCanvasBounds(read(true));
+                    initCanvasBounds(read());
                     if (tempRunning) {
                         innerStart();
                     }
