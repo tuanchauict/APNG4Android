@@ -1,22 +1,16 @@
 package com.github.penfeizhou.animation.decode;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 
 import com.github.penfeizhou.animation.io.Reader;
 import com.github.penfeizhou.animation.io.Writer;
 import com.github.penfeizhou.animation.loader.Loader;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.locks.LockSupport;
 
 import kotlin.Unit;
@@ -27,30 +21,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     private static final Rect RECT_EMPTY = new Rect();
 
-    protected Map<Bitmap, Canvas> cachedCanvas = new WeakHashMap<>();
-
     public static final boolean DEBUG = false;
-
-    /**
-     * Rendering callbacks for decoders
-     */
-    public interface RenderListener {
-        /**
-         * Playback starts
-         */
-        void onStart();
-
-        /**
-         * Frame Playback
-         */
-        void onRender(@NonNull ByteBuffer byteBuffer);
-
-        /**
-         * End of Playback
-         */
-        void onEnd();
-    }
-
 
     /**
      * @param loader         webp-like reader
@@ -87,35 +58,12 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         return fullRect == null ? RECT_EMPTY : fullRect;
     }
 
-    @WorkerThread
-    protected void innerStop() {
-        workerHandler.removeCallbacks(renderTask);
-        frames.clear();
-        clearBitmapPool();
-
-        if (frameBuffer != null) {
-            frameBuffer = null;
-        }
-        cachedCanvas.clear();
-        closeReader();
-        release();
-        if (DEBUG) {
-            Log.i(TAG, debugInfo() + " release and Set state to IDLE");
-        }
-        setState(State.IDLE);
-        for (RenderListener renderListener : renderListeners) {
-            renderListener.onEnd();
-        }
-    }
-
     private String debugInfo() {
         if (DEBUG) {
             return String.format("thread is %s, decoder is %s,state is %s", Thread.currentThread(), FrameSeqDecoder.this, getState());
         }
         return "";
     }
-
-    protected abstract void release();
 
     public boolean setDesiredSize(int width, int height) {
         boolean sampleSizeChanged = false;

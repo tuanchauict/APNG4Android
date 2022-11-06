@@ -1,18 +1,19 @@
 package com.github.penfeizhou.animation.decode
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.WorkerThread
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder.RenderListener
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
@@ -40,8 +41,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
             .getLooper(FrameDecoderExecutor.getInstance().generateTaskId())
     )
 
-    @JvmField
-    protected val renderListeners: MutableSet<RenderListener> =
+    private val renderListeners: MutableSet<RenderListener> =
         listOfNotNull(renderListener).toMutableSet()
 
     @JvmField
@@ -51,16 +51,19 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     private val bitmapReaderManager = BitmapReaderManager(loader, readerFactory)
 
     @JvmField
-    protected var playCount: Int = 0
+    protected val cachedCanvas: MutableMap<Bitmap, Canvas> = WeakHashMap()
 
-    @JvmField
-    protected var loopLimit: Int? = null
+    private var playCount: Int = 0
+
+    private var loopLimit: Int? = null
+
+    private val numPlays: Int
+        get() = loopLimit ?: getLoopCount()
 
     /**
      * If played all the needed
      */
-    @JvmField
-    protected var finished: Boolean = false
+    private var finished: Boolean = false
 
     @Volatile
     protected var state = State.IDLE
@@ -99,13 +102,11 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     protected fun recycleBitmap(bitmap: Bitmap?) = bitmapPool.recycle(bitmap)
 
-    protected fun clearBitmapPool() = bitmapPool.clear()
-
     protected fun canStep(): Boolean {
         if (!isRunning || frames.isEmpty()) {
             return false
         }
-        val numPlays = getNumPlays()
+        val numPlays = numPlays
         if (numPlays <= 0) {
             return true
         }
@@ -173,7 +174,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         )
         state = State.RUNNING
 
-        if (getNumPlays() == 0 || !finished) {
+        if (numPlays == 0 || !finished) {
             frameIndex = -1
             renderTask.run()
 
@@ -182,6 +183,12 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
             }
         } else {
             Log.i(TAG, "$debugInfo No need to start")
+        }
+    }
+
+    fun stopIfNeeded() = ensureWorkerExecute {
+        if (renderListeners.isEmpty()) {
+            stop()
         }
     }
 
@@ -203,13 +210,28 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         ensureWorkerExecute(::innerStop)
     }
 
-    protected abstract fun innerStop()
+    @WorkerThread
+    protected fun innerStop() {
+        workerHandler.removeCallbacks(renderTask)
+        frames.clear()
+        bitmapPool.clear()
+        frameBuffer = null
+        cachedCanvas.clear()
+        bitmapReaderManager.closeReader()
+        release()
 
-    fun stopIfNeeded() = ensureWorkerExecute {
-        if (renderListeners.isEmpty()) {
-            stop()
+        if (DEBUG) {
+            Log.i(TAG, "$debugInfo release  and Set state to IDLE")
+        }
+        state = State.IDLE
+
+        for (listener in renderListeners) {
+            listener.onEnd()
         }
     }
+
+    @WorkerThread
+    protected abstract fun release()
 
     fun resume() {
         paused.compareAndSet(true, false)
@@ -241,9 +263,6 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     fun getFrame(index: Int): Frame<R, W>? = frames.getOrNull(index)
 
-    @WorkerThread
-    protected fun closeReader() = bitmapReaderManager.closeReader()
-
     protected fun initCanvasBounds(rect: Rect) {
         fullRect = rect
         val capacityBytes = (rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4
@@ -264,8 +283,6 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     fun setLoopLimit(limit: Int) {
         loopLimit = limit
     }
-
-    protected fun getNumPlays(): Int = loopLimit ?: getLoopCount()
 
     /**
      * Gets the Loop Count defined in file
@@ -301,6 +318,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
             val delay = step()
             val cost = currentTimeProvider.invoke() - start
 
+            // Schedule next frame
             workerHandler.postDelayed(this, (delay - cost).coerceAtLeast(0))
 
             val frameBuffer = frameBuffer ?: return
@@ -312,6 +330,26 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     protected enum class State {
         IDLE, RUNNING, INITIALIZING, FINISHING
+    }
+
+    /**
+     * Rendering callbacks for decoders
+     */
+    interface RenderListener {
+        /**
+         * Playback starts
+         */
+        fun onStart()
+
+        /**
+         * Frame Playback
+         */
+        fun onRender(byteBuffer: ByteBuffer)
+
+        /**
+         * End of Playback
+         */
+        fun onEnd()
     }
 
     companion object {
