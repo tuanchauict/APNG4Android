@@ -115,7 +115,11 @@ class APNGDecoder(
             return
         }
         try {
-            val bitmap = obtainBitmap(fullRect.width() / sampleSize, fullRect.height() / sampleSize)
+            val bitmap =
+                obtainBitmap(
+                    width = fullRect.width() / sampleSize,
+                    height = fullRect.height() / sampleSize
+                ) ?: return
             var canvas = cachedCanvas[bitmap]
             if (canvas == null) {
                 canvas = Canvas(bitmap)
@@ -123,7 +127,7 @@ class APNGDecoder(
             }
             if (frame is APNGFrame) {
                 // Restore the current frame from the cache
-                frameBuffer.rewind()
+                frameBuffer?.rewind()
                 bitmap.copyPixelsFromBuffer(frameBuffer)
                 // Process the settings in the snapshot before starting to draw
                 if (frameIndex == 0) {
@@ -169,7 +173,7 @@ class APNGDecoder(
             val inBitmap = obtainBitmap(frame.frameWidth, frame.frameHeight)
             recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, writer))
             recycleBitmap(inBitmap)
-            frameBuffer.rewind()
+            frameBuffer?.rewind()
             bitmap.copyPixelsToBuffer(frameBuffer)
             recycleBitmap(bitmap)
         } catch (e: Exception) {

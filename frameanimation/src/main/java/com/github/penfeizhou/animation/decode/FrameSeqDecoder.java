@@ -3,47 +3,33 @@ package com.github.penfeizhou.animation.decode;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.github.penfeizhou.animation.executor.FrameDecoderExecutor;
 import com.github.penfeizhou.animation.io.Reader;
 import com.github.penfeizhou.animation.io.Writer;
 import com.github.penfeizhou.animation.loader.Loader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
-/**
- * @Description: Abstract Frame Animation Decoder
- * @Author: pengfei.zhou
- * @CreateDate: 2019/3/27
- */
-public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
+public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extends BaseFrameSeqDecoder<R, W> {
     private static final String TAG = FrameSeqDecoder.class.getSimpleName();
-    private final int taskId;
 
     private final Loader mLoader;
-    private final Handler workerHandler;
-    protected List<Frame<R, W>> frames = new ArrayList<>();
-    protected int frameIndex = -1;
+
     private int playCount;
     private Integer loopLimit = null;
     private final Set<RenderListener> renderListeners = new HashSet<>();
-    private final AtomicBoolean paused = new AtomicBoolean(true);
     private static final Rect RECT_EMPTY = new Rect();
     private final Runnable renderTask = new Runnable() {
         @Override
@@ -60,7 +46,9 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
                 long cost = System.currentTimeMillis() - start;
                 workerHandler.postDelayed(this, Math.max(0, delay - cost));
                 for (RenderListener renderListener : renderListeners) {
-                    renderListener.onRender(frameBuffer);
+                    if (frameBuffer != null) {
+                        renderListener.onRender(frameBuffer);
+                    }
                 }
             } else {
                 stop();
@@ -69,11 +57,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
     };
     protected int sampleSize = 1;
 
-    private final Set<Bitmap> cacheBitmaps = new HashSet<>();
-    private final Object cacheBitmapsLock = new Object();
-
     protected Map<Bitmap, Canvas> cachedCanvas = new WeakHashMap<>();
-    protected ByteBuffer frameBuffer;
+
     protected volatile Rect fullRect;
     private W mWriter = getWriter();
     private R mReader = null;
@@ -97,61 +82,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
     protected abstract R getReader(Reader reader);
 
     /**
-     * Obtains a bitmap with size width and height.
-     * <p>
-     * First, try to reuse a bitmap from the pool. If no bitmap in the pool has the size match width
-     * and height, create a new bitmap with the size of width x height
-     *
-     * @param width
-     * @param height
-     * @return
-     */
-    protected Bitmap obtainBitmap(int width, int height) {
-        synchronized (cacheBitmapsLock) {
-            Bitmap bitmap = null;
-            Iterator<Bitmap> iterator = cacheBitmaps.iterator();
-            int reuseSize = width * height * 4;
-            while (iterator.hasNext()) {
-                bitmap = iterator.next();
-
-                if (bitmap != null && bitmap.getAllocationByteCount() >= reuseSize) {
-                    reconfigureBitmapIfNeed(bitmap, width, height);
-                    bitmap.eraseColor(0);
-                    iterator.remove();
-                    return bitmap;
-                }
-            }
-
-            if (width <= 0 || height <= 0) {
-                return null;
-            }
-            try {
-                Bitmap.Config config = Bitmap.Config.ARGB_8888;
-                bitmap = Bitmap.createBitmap(width, height, config);
-            } catch (Exception | OutOfMemoryError e) {
-                e.printStackTrace();
-            }
-            return bitmap;
-        }
-    }
-
-    private void reconfigureBitmapIfNeed(Bitmap bitmap, int width, int height) {
-        if (bitmap.getWidth() != width || bitmap.getHeight() != height) {
-            if (width > 0 && height > 0) {
-                bitmap.reconfigure(width, height, Bitmap.Config.ARGB_8888);
-            }
-        }
-    }
-
-    protected void recycleBitmap(Bitmap bitmap) {
-        synchronized (cacheBitmapsLock) {
-            if (bitmap != null) {
-                cacheBitmaps.add(bitmap);
-            }
-        }
-    }
-
-    /**
      * Rendering callbacks for decoders
      */
     public interface RenderListener {
@@ -163,7 +93,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
         /**
          * Frame Playback
          */
-        void onRender(ByteBuffer byteBuffer);
+        void onRender(@NonNull ByteBuffer byteBuffer);
 
         /**
          * End of Playback
@@ -181,8 +111,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
         if (renderListener != null) {
             this.renderListeners.add(renderListener);
         }
-        this.taskId = FrameDecoderExecutor.getInstance().generateTaskId();
-        this.workerHandler = new Handler(FrameDecoderExecutor.getInstance().getLooper(taskId));
     }
 
 
@@ -307,14 +235,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
     private void innerStop() {
         workerHandler.removeCallbacks(renderTask);
         frames.clear();
-        synchronized (cacheBitmapsLock) {
-            for (Bitmap bitmap : cacheBitmaps) {
-                if (bitmap != null && !bitmap.isRecycled()) {
-                    bitmap.recycle();
-                }
-            }
-            cacheBitmaps.clear();
-        }
+        clearBitmapPool();
+
         if (frameBuffer != null) {
             frameBuffer = null;
         }
@@ -340,6 +262,9 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
         }
     }
 
+
+
+    @Override
     public void stop() {
         if (fullRect == RECT_EMPTY) {
             return;
@@ -448,7 +373,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
         return this.loopLimit != null ? this.loopLimit : this.getLoopCount();
     }
 
-    private boolean canStep() {
+    @Override
+    protected boolean canStep() {
         if (!isRunning()) {
             return false;
         }
@@ -525,26 +451,12 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> {
                 break;
             }
         }
-        frameBuffer.rewind();
+        if (frameBuffer != null) {
+            frameBuffer.rewind();
+        }
         Bitmap bitmap = Bitmap.createBitmap(getBounds().width() / getSampleSize(), getBounds().height() / getSampleSize(), Bitmap.Config.ARGB_8888);
         bitmap.copyPixelsFromBuffer(frameBuffer);
         innerStop();
         return bitmap;
-    }
-
-    public int getMemorySize() {
-        synchronized (cacheBitmapsLock) {
-            int size = 0;
-            for (Bitmap bitmap : cacheBitmaps) {
-                if (bitmap.isRecycled()) {
-                    continue;
-                }
-                size += bitmap.getAllocationByteCount();
-            }
-            if (frameBuffer != null) {
-                size += frameBuffer.capacity();
-            }
-            return size;
-        }
     }
 }
