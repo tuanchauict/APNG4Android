@@ -63,7 +63,13 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected var finished: Boolean = false
 
     @Volatile
-    protected var mState = State.IDLE
+    protected var state = State.IDLE
+        set(value) {
+            field = value
+            if (DEBUG) {
+                Log.i(TAG, "$debugInfo Update state to $value")
+            }
+        }
 
     @JvmField
     @Volatile
@@ -73,11 +79,11 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     var sampleSize = 1
 
     val isRunning: Boolean
-        get() = mState == State.RUNNING || mState == State.INITIALIZING
+        get() = state == State.RUNNING || state == State.INITIALIZING
 
     private val debugInfo: String
         get() = if (DEBUG) {
-            "Thread is ${Thread.currentThread()}, decoder is $this, state is $mState"
+            "Thread is ${Thread.currentThread()}, decoder is $this, state is $state"
         } else {
             ""
         }
@@ -139,14 +145,11 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
             return
         }
 
-        if (mState == State.FINISHING) {
-            Log.e(TAG, "$debugInfo Processing, wait for finish at $mState")
-        }
-        if (DEBUG) {
-            Log.i(TAG, "$debugInfo Set state to INITIALIZING")
+        if (state == State.FINISHING) {
+            Log.e(TAG, "$debugInfo Processing, wait for finish at $state")
         }
 
-        mState = State.INITIALIZING
+        state = State.INITIALIZING
         ensureWorkerExecute(::innerStart)
     }
 
@@ -168,7 +171,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
                 |Set state to running 
                 |cost = ${System.currentTimeMillis() - startTimeMillis}""".trimMargin()
         )
-        mState = State.RUNNING
+        state = State.RUNNING
 
         if (getNumPlays() == 0 || !finished) {
             frameIndex = -1
@@ -182,7 +185,25 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         }
     }
 
-    protected abstract fun stop()
+    fun stop() {
+        if (fullRect == RECT_EMPTY) {
+            return
+        }
+
+        if (state == State.FINISHING || state == State.IDLE) {
+            Log.i(TAG, "$debugInfo no need to stop")
+            return
+        }
+
+        if (state == State.INITIALIZING) {
+            Log.e(TAG, "$debugInfo Processing, wait for finish at $state")
+        }
+        state = State.FINISHING
+
+        ensureWorkerExecute(::innerStop)
+    }
+
+    protected abstract fun innerStop()
 
     fun stopIfNeeded() = ensureWorkerExecute {
         if (renderListeners.isEmpty()) {

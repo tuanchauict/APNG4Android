@@ -31,8 +31,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     public static final boolean DEBUG = false;
 
-    private volatile State mState = State.IDLE;
-
     /**
      * Rendering callbacks for decoders
      */
@@ -68,7 +66,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     public Rect getBounds() {
         if (fullRect == null) {
-            if (mState == State.FINISHING) {
+            if (getState() == State.FINISHING) {
                 Log.e(TAG, "In finishing,do not interrupt");
             }
             final Thread thread = Thread.currentThread();
@@ -90,7 +88,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     }
 
     @WorkerThread
-    private void innerStop() {
+    protected void innerStop() {
         workerHandler.removeCallbacks(renderTask);
         frames.clear();
         clearBitmapPool();
@@ -104,39 +102,15 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         if (DEBUG) {
             Log.i(TAG, debugInfo() + " release and Set state to IDLE");
         }
-        mState = State.IDLE;
+        setState(State.IDLE);
         for (RenderListener renderListener : renderListeners) {
             renderListener.onEnd();
         }
     }
 
-
-    @Override
-    public void stop() {
-        if (fullRect == RECT_EMPTY) {
-            return;
-        }
-        if (mState == State.FINISHING || mState == State.IDLE) {
-            Log.i(TAG, debugInfo() + "No need to stop");
-            return;
-        }
-        if (mState == State.INITIALIZING) {
-            Log.e(TAG, debugInfo() + "Processing,wait for finish at " + mState);
-        }
-        if (DEBUG) {
-            Log.i(TAG, debugInfo() + " Set state to finishing");
-        }
-        mState = State.FINISHING;
-
-        ensureWorkerExecute(() -> {
-            innerStop();
-            return Unit.INSTANCE;
-        });
-    }
-
     private String debugInfo() {
         if (DEBUG) {
-            return String.format("thread is %s, decoder is %s,state is %s", Thread.currentThread(), FrameSeqDecoder.this, mState.toString());
+            return String.format("thread is %s, decoder is %s,state is %s", Thread.currentThread(), FrameSeqDecoder.this, getState());
         }
         return "";
     }
@@ -187,11 +161,11 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
      * @param index <0 means reverse from last index
      */
     public Bitmap getFrameBitmap(int index) throws IOException {
-        if (mState != State.IDLE) {
+        if (getState() != State.IDLE) {
             Log.e(TAG, debugInfo() + ",stop first");
             return null;
         }
-        mState = State.RUNNING;
+        setState(State.RUNNING);
         paused.compareAndSet(true, false);
         if (frames.size() == 0) {
             initCanvasBounds(read());
