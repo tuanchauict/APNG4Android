@@ -27,19 +27,9 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     private static final Rect RECT_EMPTY = new Rect();
 
-    protected int sampleSize = 1;
-
     protected Map<Bitmap, Canvas> cachedCanvas = new WeakHashMap<>();
 
-    protected volatile Rect fullRect;
     public static final boolean DEBUG = false;
-
-    private enum State {
-        IDLE,
-        RUNNING,
-        INITIALIZING,
-        FINISHING,
-    }
 
     private volatile State mState = State.IDLE;
 
@@ -99,71 +89,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         return fullRect == null ? RECT_EMPTY : fullRect;
     }
 
-    private void initCanvasBounds(Rect rect) {
-        fullRect = rect;
-        frameBuffer = ByteBuffer.allocate((rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4);
-    }
-
-
-    public int getFrameCount() {
-        return this.frames.size();
-    }
-
-    /**
-     * @return Loop Count defined in file
-     */
-    protected abstract int getLoopCount();
-
-    public void start() {
-        if (fullRect == RECT_EMPTY) {
-            return;
-        }
-        if (mState == State.RUNNING || mState == State.INITIALIZING) {
-            Log.i(TAG, debugInfo() + " Already started");
-            return;
-        }
-        if (mState == State.FINISHING) {
-            Log.e(TAG, debugInfo() + " Processing,wait for finish at " + mState);
-        }
-        if (DEBUG) {
-            Log.i(TAG, debugInfo() + "Set state to INITIALIZING");
-        }
-        mState = State.INITIALIZING;
-
-        ensureWorkerExecute(() -> {
-            innerStart();
-            return Unit.INSTANCE;
-        });
-    }
-
-    @WorkerThread
-    private void innerStart() {
-        paused.compareAndSet(true, false);
-
-        final long start = System.currentTimeMillis();
-        try {
-            if (frames.size() == 0) {
-                try {
-                    initCanvasBounds(read());
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
-            }
-        } finally {
-            Log.i(TAG, debugInfo() + " Set state to RUNNING,cost " + (System.currentTimeMillis() - start));
-            mState = State.RUNNING;
-        }
-        if (getNumPlays() == 0 || !finished) {
-            this.frameIndex = -1;
-            renderTask.run();
-            for (RenderListener renderListener : renderListeners) {
-                renderListener.onStart();
-            }
-        } else {
-            Log.i(TAG, debugInfo() + " No need to started");
-        }
-    }
-
     @WorkerThread
     private void innerStop() {
         workerHandler.removeCallbacks(renderTask);
@@ -218,14 +143,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     protected abstract void release();
 
-    public boolean isRunning() {
-        return mState == State.RUNNING || mState == State.INITIALIZING;
-    }
-
-    public int getSampleSize() {
-        return sampleSize;
-    }
-
     public boolean setDesiredSize(int width, int height) {
         boolean sampleSizeChanged = false;
         final int sample = getDesiredSample(width, height);
@@ -264,26 +181,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         return sample;
     }
 
-    @Override
-    protected boolean canStep() {
-        if (!isRunning()) {
-            return false;
-        }
-        if (frames.size() == 0) {
-            return false;
-        }
-        if (getNumPlays() <= 0) {
-            return true;
-        }
-        if (this.playCount < getNumPlays() - 1) {
-            return true;
-        } else if (this.playCount == getNumPlays() - 1 && this.frameIndex < this.getFrameCount() - 1) {
-            return true;
-        }
-        finished = true;
-        return false;
-    }
-
     /**
      * Get Indexed frame
      *
@@ -316,7 +213,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         if (frameBuffer != null) {
             frameBuffer.rewind();
         }
-        Bitmap bitmap = Bitmap.createBitmap(getBounds().width() / getSampleSize(), getBounds().height() / getSampleSize(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(getBounds().width() / sampleSize, getBounds().height() / sampleSize, Bitmap.Config.ARGB_8888);
         bitmap.copyPixelsFromBuffer(frameBuffer);
         innerStop();
         return bitmap;

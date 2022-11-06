@@ -25,6 +25,8 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     @JvmField
     protected var frames: MutableList<Frame<R, W>> = mutableListOf()
+    val frameCount: Int
+        get() = frames.size
 
     @JvmField
     protected var frameIndex = -1
@@ -46,6 +48,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected val renderTask: Runnable = RenderTaskRunnable()
 
     private val bitmapPool = BitmapPool()
+    private val bitmapReaderManager = BitmapReaderManager(loader, readerFactory)
 
     @JvmField
     protected var playCount: Int = 0
@@ -59,9 +62,25 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     @JvmField
     protected var finished: Boolean = false
 
-    private var mReader: R? = null
+    @Volatile
+    protected var mState = State.IDLE
 
-    private val bitmapReaderManager = BitmapReaderManager(loader, readerFactory)
+    @JvmField
+    @Volatile
+    protected var fullRect: Rect? = null
+
+    @JvmField
+    var sampleSize = 1
+
+    val isRunning: Boolean
+        get() = mState == State.RUNNING || mState == State.INITIALIZING
+
+    private val debugInfo: String
+        get() = if (DEBUG) {
+            "Thread is ${Thread.currentThread()}, decoder is $this, state is $mState"
+        } else {
+            ""
+        }
 
     /**
      * Obtains a bitmap with size [width] x [height] with [Bitmap.Config.ARGB_8888] config.
@@ -76,7 +95,23 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     protected fun clearBitmapPool() = bitmapPool.clear()
 
-    protected abstract fun canStep(): Boolean
+    protected fun canStep(): Boolean {
+        if (!isRunning || frames.isEmpty()) {
+            return false
+        }
+        val numPlays = getNumPlays()
+        if (numPlays <= 0) {
+            return true
+        }
+
+        if (playCount < numPlays - 1) {
+            return true
+        } else if (playCount == numPlays - 1 && frameIndex < frames.lastIndex) {
+            return true
+        }
+        finished = true
+        return false
+    }
 
     /**
      * Prepares a step during animating.
@@ -92,6 +127,59 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         val frame = getFrame(frameIndex) ?: return 0
         renderFrame(frame)
         return frame.frameDuration.toLong()
+    }
+
+    fun start() {
+        if (fullRect == RECT_EMPTY) {
+            return
+        }
+
+        if (isRunning) {
+            Log.i(TAG, "$debugInfo Already started")
+            return
+        }
+
+        if (mState == State.FINISHING) {
+            Log.e(TAG, "$debugInfo Processing, wait for finish at $mState")
+        }
+        if (DEBUG) {
+            Log.i(TAG, "$debugInfo Set state to INITIALIZING")
+        }
+
+        mState = State.INITIALIZING
+        ensureWorkerExecute(::innerStart)
+    }
+
+    @WorkerThread
+    protected fun innerStart() {
+        paused.compareAndSet(true, false)
+        val startTimeMillis = System.currentTimeMillis()
+
+        if (frames.isEmpty()) {
+            try {
+                initCanvasBounds(read())
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+        Log.i(
+            TAG,
+            """$debugInfo 
+                |Set state to running 
+                |cost = ${System.currentTimeMillis() - startTimeMillis}""".trimMargin()
+        )
+        mState = State.RUNNING
+
+        if (getNumPlays() == 0 || !finished) {
+            frameIndex = -1
+            renderTask.run()
+
+            for (listener in renderListeners) {
+                listener.onStart()
+            }
+        } else {
+            Log.i(TAG, "$debugInfo No need to start")
+        }
     }
 
     protected abstract fun stop()
@@ -134,6 +222,12 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     @WorkerThread
     protected fun closeReader() = bitmapReaderManager.closeReader()
+
+    protected fun initCanvasBounds(rect: Rect) {
+        fullRect = rect
+        val capacityBytes = (rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4
+        frameBuffer = ByteBuffer.allocate(capacityBytes)
+    }
 
     @Throws(IOException::class)
     protected fun read(): Rect = read(bitmapReaderManager.getReader())
@@ -195,8 +289,13 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         }
     }
 
+    protected enum class State {
+        IDLE, RUNNING, INITIALIZING, FINISHING
+    }
+
     companion object {
         const val DEBUG = false
+        val RECT_EMPTY = Rect()
 
         private const val TAG = "FrameDecoder"
     }

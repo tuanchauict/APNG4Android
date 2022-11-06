@@ -10,7 +10,6 @@ import android.graphics.Paint;
 import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -185,13 +184,13 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, 
         super.setBounds(left, top, right, bottom);
         boolean sampleSizeChanged = frameSeqDecoder.setDesiredSize(getBounds().width(), getBounds().height());
         matrix.setScale(
-                1.0f * getBounds().width() * frameSeqDecoder.getSampleSize() / frameSeqDecoder.getBounds().width(),
-                1.0f * getBounds().height() * frameSeqDecoder.getSampleSize() / frameSeqDecoder.getBounds().height());
+                1.0f * getBounds().width() * frameSeqDecoder.sampleSize / frameSeqDecoder.getBounds().width(),
+                1.0f * getBounds().height() * frameSeqDecoder.sampleSize / frameSeqDecoder.getBounds().height());
 
         if (sampleSizeChanged)
             this.bitmap = Bitmap.createBitmap(
-                    frameSeqDecoder.getBounds().width() / frameSeqDecoder.getSampleSize(),
-                    frameSeqDecoder.getBounds().height() / frameSeqDecoder.getSampleSize(),
+                    frameSeqDecoder.getBounds().width() / frameSeqDecoder.sampleSize,
+                    frameSeqDecoder.getBounds().height() / frameSeqDecoder.sampleSize,
                     Bitmap.Config.ARGB_8888);
     }
 
@@ -222,8 +221,8 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, 
         }
         if (this.bitmap == null || this.bitmap.isRecycled()) {
             this.bitmap = Bitmap.createBitmap(
-                    frameSeqDecoder.getBounds().width() / frameSeqDecoder.getSampleSize(),
-                    frameSeqDecoder.getBounds().height() / frameSeqDecoder.getSampleSize(),
+                    frameSeqDecoder.getBounds().width() / frameSeqDecoder.sampleSize,
+                    frameSeqDecoder.getBounds().height() / frameSeqDecoder.sampleSize,
                     Bitmap.Config.ARGB_8888);
         }
         byteBuffer.rewind();
