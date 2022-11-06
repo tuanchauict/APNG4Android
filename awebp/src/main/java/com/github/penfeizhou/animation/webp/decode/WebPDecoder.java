@@ -11,7 +11,6 @@ import android.graphics.Rect;
 
 import com.github.penfeizhou.animation.decode.Frame;
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
-import com.github.penfeizhou.animation.io.Reader;
 import com.github.penfeizhou.animation.loader.Loader;
 import com.github.penfeizhou.animation.webp.io.WebPReader;
 import com.github.penfeizhou.animation.webp.io.WebPWriter;
@@ -41,24 +40,18 @@ public class WebPDecoder extends FrameSeqDecoder<WebPReader, WebPWriter> {
      * @param renderListener callback for rendering
      */
     public WebPDecoder(Loader loader, RenderListener renderListener) {
-        super(loader, renderListener);
+        super(loader, renderListener, WebPReader::new);
         mTransparentFillPaint = new Paint();
         mTransparentFillPaint.setColor(Color.TRANSPARENT);
         mTransparentFillPaint.setStyle(Paint.Style.FILL);
         mTransparentFillPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
     }
 
-    @Override
     protected WebPWriter getWriter() {
         if (mWriter == null) {
             mWriter = new WebPWriter();
         }
         return mWriter;
-    }
-
-    @Override
-    protected WebPReader getReader(Reader reader) {
-        return new WebPReader(reader);
     }
 
     @Override

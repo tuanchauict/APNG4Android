@@ -20,11 +20,10 @@ import java.util.WeakHashMap;
 import java.util.concurrent.locks.LockSupport;
 
 import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extends BaseFrameSeqDecoder<R, W> {
     private static final String TAG = FrameSeqDecoder.class.getSimpleName();
-
-    private final Loader mLoader;
 
     private static final Rect RECT_EMPTY = new Rect();
 
@@ -33,8 +32,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     protected Map<Bitmap, Canvas> cachedCanvas = new WeakHashMap<>();
 
     protected volatile Rect fullRect;
-    private W mWriter = getWriter();
-    private R mReader = null;
     public static final boolean DEBUG = false;
 
     private enum State {
@@ -45,10 +42,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     }
 
     private volatile State mState = State.IDLE;
-
-    protected abstract W getWriter();
-
-    protected abstract R getReader(Reader reader);
 
     /**
      * Rendering callbacks for decoders
@@ -75,9 +68,12 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
      * @param loader         webp-like reader
      * @param renderListener Callbacks for rendering
      */
-    public FrameSeqDecoder(Loader loader, @Nullable RenderListener renderListener) {
-        super(renderListener);
-        this.mLoader = loader;
+    public FrameSeqDecoder(
+            Loader loader,
+            @Nullable RenderListener renderListener,
+            Function1<Reader, R> readerFactory
+    ) {
+        super(loader, renderListener, readerFactory);
     }
 
     public Rect getBounds() {
@@ -89,12 +85,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
             workerHandler.post(() -> {
                 try {
                     if (fullRect == null) {
-                        if (mReader == null) {
-                            mReader = getReader(mLoader.obtain());
-                        } else {
-                            mReader.reset();
-                        }
-                        initCanvasBounds(read(mReader));
+                        initCanvasBounds(read());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -111,9 +102,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     private void initCanvasBounds(Rect rect) {
         fullRect = rect;
         frameBuffer = ByteBuffer.allocate((rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4);
-        if (mWriter == null) {
-            mWriter = getWriter();
-        }
     }
 
 
@@ -156,12 +144,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         try {
             if (frames.size() == 0) {
                 try {
-                    if (mReader == null) {
-                        mReader = getReader(mLoader.obtain());
-                    } else {
-                        mReader.reset();
-                    }
-                    initCanvasBounds(read(mReader));
+                    initCanvasBounds(read());
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
@@ -191,17 +174,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
             frameBuffer = null;
         }
         cachedCanvas.clear();
-        try {
-            if (mReader != null) {
-                mReader.close();
-                mReader = null;
-            }
-            if (mWriter != null) {
-                mWriter.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        closeReader();
         release();
         if (DEBUG) {
             Log.i(TAG, debugInfo() + " release and Set state to IDLE");
@@ -265,7 +238,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
                 innerStop();
                 try {
                     sampleSize = sample;
-                    initCanvasBounds(read(getReader(mLoader.obtain())));
+                    initCanvasBounds(read(true));
                     if (tempRunning) {
                         innerStart();
                     }
@@ -290,8 +263,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         }
         return sample;
     }
-
-    protected abstract Rect read(R reader) throws IOException;
 
     @Override
     protected boolean canStep() {
@@ -326,12 +297,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         mState = State.RUNNING;
         paused.compareAndSet(true, false);
         if (frames.size() == 0) {
-            if (mReader == null) {
-                mReader = getReader(mLoader.obtain());
-            } else {
-                mReader.reset();
-            }
-            initCanvasBounds(read(mReader));
+            initCanvasBounds(read());
         }
         if (index < 0) {
             index += this.frames.size();

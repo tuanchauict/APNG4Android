@@ -40,21 +40,15 @@ public class GifDecoder extends FrameSeqDecoder<GifReader, GifWriter> {
      * @param renderListener 渲染的回调
      */
     public GifDecoder(Loader loader, RenderListener renderListener) {
-        super(loader, renderListener);
+        super(loader, renderListener, (GifReader::new));
         paint.setAntiAlias(true);
     }
 
-    @Override
     protected GifWriter getWriter() {
         if (mGifWriter == null) {
             mGifWriter = new GifWriter();
         }
         return mGifWriter;
-    }
-
-    @Override
-    protected GifReader getReader(Reader reader) {
-        return new GifReader(reader);
     }
 
     @Override

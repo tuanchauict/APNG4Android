@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.decode
 
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -9,11 +10,15 @@ import com.github.penfeizhou.animation.decode.FrameSeqDecoder.RenderListener
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.io.Writer
+import com.github.penfeizhou.animation.loader.Loader
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
-    renderListener: RenderListener?
+    protected val loader: Loader,
+    renderListener: RenderListener?,
+    readerFactory: (Reader) -> R
 ) {
     @JvmField
     protected var frameBuffer: ByteBuffer? = null
@@ -53,6 +58,10 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
      */
     @JvmField
     protected var finished: Boolean = false
+
+    private var mReader: R? = null
+
+    private val bitmapReaderManager = BitmapReaderManager(loader, readerFactory)
 
     /**
      * Obtains a bitmap with size [width] x [height] with [Bitmap.Config.ARGB_8888] config.
@@ -122,6 +131,21 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected abstract fun renderFrame(frame: Frame<R, W>)
 
     fun getFrame(index: Int): Frame<R, W>? = frames.getOrNull(index)
+
+    @WorkerThread
+    protected fun closeReader() = bitmapReaderManager.closeReader()
+
+    @Throws(IOException::class)
+    @JvmOverloads
+    protected fun read(withNewReader: Boolean = false): Rect =
+        if (withNewReader) {
+            read(bitmapReaderManager.getNewReader())
+        } else {
+            read(bitmapReaderManager.getReader())
+        }
+
+    @Throws(IOException::class)
+    protected abstract fun read(reader: R): Rect
 
     fun getMemorySize(): Int {
         val frameBufferSizeBytes = frameBuffer?.capacity() ?: 0

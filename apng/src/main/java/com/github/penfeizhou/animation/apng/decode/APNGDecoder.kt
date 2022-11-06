@@ -9,7 +9,6 @@ import com.github.penfeizhou.animation.apng.io.APNGReader
 import com.github.penfeizhou.animation.apng.io.APNGWriter
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder
-import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -25,8 +24,7 @@ import java.nio.ByteBuffer
 class APNGDecoder(
     loader: Loader?,
     renderListener: RenderListener?
-) : FrameSeqDecoder<APNGReader, APNGWriter>(loader, renderListener) {
-    private var apngWriter: APNGWriter? = null
+) : FrameSeqDecoder<APNGReader, APNGWriter>(loader, renderListener, ::APNGReader) {
     private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 
@@ -38,15 +36,7 @@ class APNGDecoder(
 
     private val snapShot = SnapShot()
 
-    override fun getWriter(): APNGWriter {
-        val writer = apngWriter ?: APNGWriter()
-        apngWriter = writer
-        return writer
-    }
-
-    override fun getReader(reader: Reader): APNGReader {
-        return APNGReader(reader)
-    }
+    private val apngWriter: APNGWriter by lazy { APNGWriter() }
 
     override fun getLoopCount(): Int {
         return mLoopCount
@@ -54,7 +44,6 @@ class APNGDecoder(
 
     override fun release() {
         snapShot.byteBuffer = null
-        apngWriter = null
     }
 
     @Throws(IOException::class)
@@ -101,7 +90,7 @@ class APNGDecoder(
                     ihdrData = chunk.data
                 }
                 is IENDChunk -> Unit
-                is Chunk -> otherChunks.add(chunk)
+                else -> otherChunks.add(chunk)
             }
         }
         val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
@@ -171,7 +160,7 @@ class APNGDecoder(
             }
             // Start actually drawing the content of the current frame
             val inBitmap = obtainBitmap(frame.frameWidth, frame.frameHeight)
-            recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, writer))
+            recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, apngWriter))
             recycleBitmap(inBitmap)
             frameBuffer?.rewind()
             bitmap.copyPixelsToBuffer(frameBuffer)
