@@ -3,7 +3,6 @@ package com.github.penfeizhou.animation.decode;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -16,11 +15,11 @@ import com.github.penfeizhou.animation.loader.Loader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.LockSupport;
+
+import kotlin.Unit;
 
 public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extends BaseFrameSeqDecoder<R, W> {
     private static final String TAG = FrameSeqDecoder.class.getSimpleName();
@@ -29,32 +28,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     private int playCount;
     private Integer loopLimit = null;
-    private final Set<RenderListener> renderListeners = new HashSet<>();
     private static final Rect RECT_EMPTY = new Rect();
-    private final Runnable renderTask = new Runnable() {
-        @Override
-        public void run() {
-            if (DEBUG) {
-                Log.d(TAG, renderTask + ",run");
-            }
-            if (paused.get()) {
-                return;
-            }
-            if (canStep()) {
-                long start = System.currentTimeMillis();
-                long delay = step();
-                long cost = System.currentTimeMillis() - start;
-                workerHandler.postDelayed(this, Math.max(0, delay - cost));
-                for (RenderListener renderListener : renderListeners) {
-                    if (frameBuffer != null) {
-                        renderListener.onRender(frameBuffer);
-                    }
-                }
-            } else {
-                stop();
-            }
-        }
-    };
+
     protected int sampleSize = 1;
 
     protected Map<Bitmap, Canvas> cachedCanvas = new WeakHashMap<>();
@@ -107,19 +82,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
      * @param renderListener Callbacks for rendering
      */
     public FrameSeqDecoder(Loader loader, @Nullable RenderListener renderListener) {
+        super(renderListener);
         this.mLoader = loader;
-        if (renderListener != null) {
-            this.renderListeners.add(renderListener);
-        }
-    }
-
-
-    public void addRenderListener(final RenderListener renderListener) {
-        this.workerHandler.post(() -> renderListeners.add(renderListener));
-    }
-
-    public void removeRenderListener(final RenderListener renderListener) {
-        this.workerHandler.post(() -> renderListeners.remove(renderListener));
     }
 
     public void stopIfNeeded() {
@@ -191,11 +155,11 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
             Log.i(TAG, debugInfo() + "Set state to INITIALIZING");
         }
         mState = State.INITIALIZING;
-        if (Looper.myLooper() == workerHandler.getLooper()) {
+
+        ensureWorkerExecute(() -> {
             innerStart();
-        } else {
-            workerHandler.post(this::innerStart);
-        }
+            return Unit.INSTANCE;
+        });
     }
 
     @WorkerThread
@@ -263,7 +227,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     }
 
 
-
     @Override
     public void stop() {
         if (fullRect == RECT_EMPTY) {
@@ -280,11 +243,11 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
             Log.i(TAG, debugInfo() + " Set state to finishing");
         }
         mState = State.FINISHING;
-        if (Looper.myLooper() == workerHandler.getLooper()) {
+
+        ensureWorkerExecute(() -> {
             innerStop();
-        } else {
-            workerHandler.post(this::innerStop);
-        }
+            return Unit.INSTANCE;
+        });
     }
 
     private String debugInfo() {
@@ -309,10 +272,11 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     }
 
     public void reset() {
-        workerHandler.post(() -> {
+        ensureWorkerExecute(() -> {
             playCount = 0;
             frameIndex = -1;
             finished = false;
+            return Unit.INSTANCE;
         });
     }
 
@@ -339,7 +303,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
             sampleSizeChanged = true;
             final boolean tempRunning = isRunning();
             workerHandler.removeCallbacks(renderTask);
-            workerHandler.post(() -> {
+
+            ensureWorkerExecute(() -> {
                 innerStop();
                 try {
                     sampleSize = sample;
@@ -350,6 +315,8 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                return Unit.INSTANCE;
             });
         }
         return sampleSizeChanged;
@@ -394,7 +361,7 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     }
 
     @WorkerThread
-    private long step() {
+    protected long step() {
         this.frameIndex++;
         if (this.frameIndex >= this.getFrameCount()) {
             this.frameIndex = 0;

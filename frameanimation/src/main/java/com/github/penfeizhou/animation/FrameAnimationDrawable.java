@@ -216,7 +216,7 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, 
     }
 
     @Override
-    public void onRender(ByteBuffer byteBuffer) {
+    public void onRender(@NonNull ByteBuffer byteBuffer) {
         if (!isRunning()) {
             return;
         }
