@@ -26,7 +26,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected var frameBuffer: ByteBuffer? = null
 
     @JvmField
-    protected var frames: MutableList<Frame<R, W>> = mutableListOf()
+    protected val frames: MutableList<Frame<R, W>> = mutableListOf()
     val frameCount: Int
         get() = frames.size
 
@@ -127,7 +127,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     protected fun recycleBitmap(bitmap: Bitmap?) = bitmapPool.recycle(bitmap)
 
-    protected fun canStep(): Boolean {
+    internal fun canStep(): Boolean {
         if (!isRunning || frames.isEmpty()) {
             return false
         }
@@ -236,7 +236,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     }
 
     @WorkerThread
-    protected fun innerStop() {
+    internal fun innerStop() {
         workerHandler.removeCallbacks(renderTask)
         frames.clear()
         bitmapPool.clear()
@@ -288,9 +288,10 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     fun getFrame(index: Int): Frame<R, W>? = frames.getOrNull(index)
 
+    // TODO: Rename this method. Init canvas bounds is not appropriate anymore.
     @WorkerThread
     @Throws(IOException::class)
-    protected fun initCanvasBounds() {
+    internal fun initCanvasBounds() {
         val rect = read(bitmapReaderManager.getReader())
         fullRect = rect
         val capacityBytes = (rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4
@@ -314,7 +315,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
      */
     protected abstract fun getLoopCount(): Int
 
-    protected fun ensureWorkerExecute(block: () -> Unit) {
+    internal fun ensureWorkerExecute(block: () -> Unit) {
         if (Looper.myLooper() == workerHandler.looper) {
             block()
         } else {
@@ -381,6 +382,6 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         const val DEBUG = false
         val RECT_EMPTY = Rect()
 
-        private const val TAG = "FrameDecoder"
+        const val TAG = "FrameDecoder"
     }
 }
