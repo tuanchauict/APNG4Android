@@ -15,6 +15,7 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.LockSupport
 
 abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected val loader: Loader,
@@ -91,6 +92,30 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
             ""
         }
 
+    fun getBounds(): Rect {
+        if (fullRect == null) {
+            if (state == State.FINISHING) {
+                Log.e(TAG, " in finishing. Do not interrupt")
+            }
+            val thread = Thread.currentThread()
+            ensureWorkerExecute {
+                try {
+                    if (fullRect == null) {
+                        initCanvasBounds()
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    fullRect = RECT_EMPTY
+                } finally {
+                    LockSupport.unpark(thread)
+                }
+            }
+            LockSupport.park(thread)
+        }
+
+        return fullRect ?: RECT_EMPTY
+    }
+
     /**
      * Obtains a bitmap with size [width] x [height] with [Bitmap.Config.ARGB_8888] config.
      *
@@ -155,13 +180,13 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     }
 
     @WorkerThread
-    protected fun innerStart() {
+    internal fun innerStart() {
         paused.compareAndSet(true, false)
         val startTimeMillis = System.currentTimeMillis()
 
         if (frames.isEmpty()) {
             try {
-                initCanvasBounds(read())
+                initCanvasBounds()
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -263,14 +288,14 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     fun getFrame(index: Int): Frame<R, W>? = frames.getOrNull(index)
 
-    protected fun initCanvasBounds(rect: Rect) {
+    @WorkerThread
+    @Throws(IOException::class)
+    protected fun initCanvasBounds() {
+        val rect = read(bitmapReaderManager.getReader())
         fullRect = rect
         val capacityBytes = (rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4
         frameBuffer = ByteBuffer.allocate(capacityBytes)
     }
-
-    @Throws(IOException::class)
-    protected fun read(): Rect = read(bitmapReaderManager.getReader())
 
     @Throws(IOException::class)
     protected abstract fun read(reader: R): Rect
