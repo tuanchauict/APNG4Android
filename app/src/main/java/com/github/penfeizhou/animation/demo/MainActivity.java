@@ -3,9 +3,11 @@ package com.github.penfeizhou.animation.demo;
 import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.view.View;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -27,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.tv_7).setOnClickListener(this);
         findViewById(R.id.tv_8).setOnClickListener(this);
 
-        onClick(findViewById(R.id.tv_1));
+        ApngActivity.start(this);
     }
 
     @Override
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.tv_1: {
                 Intent intent = new Intent(this, AnimationTestActivity.class);
                 intent.putExtra("files", new String[]{
-                        "apng_detail_guide.png",
+                        "demo.png",
                 });
                 startActivity(intent);
             }

@@ -35,6 +35,10 @@
         <activity
             android:name=".APNGRecyclerViewTestActivity"
             android:exported="true" />
+        <activity
+            android:name=".ApngActivity"
+            android:exported="true"
+            android:label="APNG" />
     </application>
 
 </manifest>
