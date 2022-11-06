@@ -26,8 +26,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     private final Loader mLoader;
 
-    private int playCount;
-    private Integer loopLimit = null;
     private static final Rect RECT_EMPTY = new Rect();
 
     protected int sampleSize = 1;
@@ -38,10 +36,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     private W mWriter = getWriter();
     private R mReader = null;
     public static final boolean DEBUG = false;
-    /**
-     * If played all the needed
-     */
-    private boolean finished = false;
 
     private enum State {
         IDLE,
@@ -84,14 +78,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
     public FrameSeqDecoder(Loader loader, @Nullable RenderListener renderListener) {
         super(renderListener);
         this.mLoader = loader;
-    }
-
-    public void stopIfNeeded() {
-        this.workerHandler.post(() -> {
-            if (renderListeners.size() == 0) {
-                stop();
-            }
-        });
     }
 
     public Rect getBounds() {
@@ -263,35 +249,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         return mState == State.RUNNING || mState == State.INITIALIZING;
     }
 
-    public boolean isPaused() {
-        return paused.get();
-    }
-
-    public void setLoopLimit(int limit) {
-        this.loopLimit = limit;
-    }
-
-    public void reset() {
-        ensureWorkerExecute(() -> {
-            playCount = 0;
-            frameIndex = -1;
-            finished = false;
-            return Unit.INSTANCE;
-        });
-    }
-
-    public void pause() {
-        workerHandler.removeCallbacks(renderTask);
-        paused.compareAndSet(false, true);
-    }
-
-    public void resume() {
-        paused.compareAndSet(true, false);
-        workerHandler.removeCallbacks(renderTask);
-        workerHandler.post(renderTask);
-    }
-
-
     public int getSampleSize() {
         return sampleSize;
     }
@@ -336,10 +293,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
 
     protected abstract Rect read(R reader) throws IOException;
 
-    private int getNumPlays() {
-        return this.loopLimit != null ? this.loopLimit : this.getLoopCount();
-    }
-
     @Override
     protected boolean canStep() {
         if (!isRunning()) {
@@ -358,30 +311,6 @@ public abstract class FrameSeqDecoder<R extends Reader, W extends Writer> extend
         }
         finished = true;
         return false;
-    }
-
-    @WorkerThread
-    protected long step() {
-        this.frameIndex++;
-        if (this.frameIndex >= this.getFrameCount()) {
-            this.frameIndex = 0;
-            this.playCount++;
-        }
-        Frame<R, W> frame = getFrame(this.frameIndex);
-        if (frame == null) {
-            return 0;
-        }
-        renderFrame(frame);
-        return frame.frameDuration;
-    }
-
-    protected abstract void renderFrame(Frame<R, W> frame);
-
-    public Frame<R, W> getFrame(int index) {
-        if (index < 0 || index >= frames.size()) {
-            return null;
-        }
-        return frames.get(index);
     }
 
     /**

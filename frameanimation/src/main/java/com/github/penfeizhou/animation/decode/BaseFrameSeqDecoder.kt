@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.WorkerThread
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder.RenderListener
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.Reader
@@ -41,6 +42,17 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     private val bitmapPool = BitmapPool()
 
+    @JvmField
+    protected var playCount: Int = 0
+
+    @JvmField
+    protected var loopLimit: Int? = null
+
+    /**
+     * If played all the needed
+     */
+    @JvmField
+    protected var finished: Boolean = false
 
     /**
      * Obtains a bitmap with size [width] x [height] with [Bitmap.Config.ARGB_8888] config.
@@ -56,21 +68,76 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected fun clearBitmapPool() = bitmapPool.clear()
 
     protected abstract fun canStep(): Boolean
-    protected abstract fun step(): Long
+
+    /**
+     * Prepares a step during animating.
+     * Returns the duration of the frame.
+     */
+    @WorkerThread
+    protected fun step(): Long {
+        frameIndex += 1
+        if (frameIndex >= frames.size) {
+            frameIndex = 0
+            playCount += 1
+        }
+        val frame = getFrame(frameIndex) ?: return 0
+        renderFrame(frame)
+        return frame.frameDuration.toLong()
+    }
+
     protected abstract fun stop()
 
-    fun addRenderListener(listener: RenderListener) {
-        ensureWorkerExecute { renderListeners.add(listener) }
+    fun stopIfNeeded() = ensureWorkerExecute {
+        if (renderListeners.isEmpty()) {
+            stop()
+        }
     }
 
-    fun removeRenderListener(listener: RenderListener) {
-        ensureWorkerExecute { renderListeners.remove(listener) }
+    fun resume() {
+        paused.compareAndSet(true, false)
+        workerHandler.removeCallbacks(renderTask)
+        workerHandler.post(renderTask)
     }
+
+    fun pause() {
+        workerHandler.removeCallbacks(renderTask)
+        paused.compareAndSet(false, true)
+    }
+
+    fun reset() = ensureWorkerExecute {
+        playCount = 0
+        frameIndex = -1
+        finished = false
+    }
+
+    fun isPaused(): Boolean = paused.get()
+
+    fun addRenderListener(listener: RenderListener) =
+        ensureWorkerExecute { renderListeners.add(listener) }
+
+    fun removeRenderListener(listener: RenderListener) =
+        ensureWorkerExecute { renderListeners.remove(listener) }
+
+    @WorkerThread
+    protected abstract fun renderFrame(frame: Frame<R, W>)
+
+    fun getFrame(index: Int): Frame<R, W>? = frames.getOrNull(index)
 
     fun getMemorySize(): Int {
         val frameBufferSizeBytes = frameBuffer?.capacity() ?: 0
         return bitmapPool.getMemorySize() + frameBufferSizeBytes
     }
+
+    fun setLoopLimit(limit: Int) {
+        loopLimit = limit
+    }
+
+    protected fun getNumPlays(): Int = loopLimit ?: getLoopCount()
+
+    /**
+     * Gets the Loop Count defined in file
+     */
+    protected abstract fun getLoopCount(): Int
 
     protected fun ensureWorkerExecute(block: () -> Unit) {
         if (Looper.myLooper() == workerHandler.looper) {
