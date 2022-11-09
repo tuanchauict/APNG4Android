@@ -70,7 +70,16 @@
             android:id="@+id/btnReset"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
             android:text="Reset" />
+
+        <Button
+            android:id="@+id/indicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:backgroundTint="#000"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="monospace"
+            android:textColor="#fff" />
     </LinearLayout>
 </LinearLayout>
