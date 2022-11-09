@@ -95,11 +95,7 @@ class WebPDecoder(loader: Loader?, renderListener: RenderListener?) :
         }
         val bitmap = obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)
             ?: return
-        var canvas = cachedCanvas[bitmap]
-        if (canvas == null) {
-            canvas = Canvas(bitmap)
-            cachedCanvas[bitmap] = canvas
-        }
+        val canvas = getCanvas(bitmap)
         // 从缓存中恢复当前帧
         frameBuffer!!.rewind()
         bitmap.copyPixelsFromBuffer(frameBuffer)

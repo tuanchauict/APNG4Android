@@ -21,7 +21,6 @@ abstract class FrameSeqDecoder2<R : Reader, W : Writer>(
             return false
         }
         val isCurrentlyRunning = isRunning
-        workerHandler.removeCallbacks(renderTask)
 
         ensureWorkerExecute {
             innerStop()
@@ -63,7 +62,7 @@ abstract class FrameSeqDecoder2<R : Reader, W : Writer>(
         }
 
         state = State.RUNNING
-        paused.compareAndSet(true, false)
+        paused.set(false)
 
         if (frames.isEmpty()) {
             initCanvasBounds()

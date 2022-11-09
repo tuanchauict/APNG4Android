@@ -85,7 +85,7 @@ class GifDecoder(loader: Loader?, renderListener: RenderListener?) :
         val bitmap =
             obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)
                 ?: return
-        val canvas = cachedCanvas.getOrPut(bitmap) { Canvas(bitmap) }
+        val canvas = getCanvas(bitmap)
 
         val frameBuffer = frameBuffer ?: return
         frameBuffer.rewind()

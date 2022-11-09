@@ -22,22 +22,19 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     renderListener: RenderListener?,
     readerFactory: (Reader) -> R
 ) {
-    @JvmField
     protected var frameBuffer: ByteBuffer? = null
+        private set
 
-    @JvmField
     protected val frames: MutableList<Frame<R, W>> = mutableListOf()
+
     val frameCount: Int
         get() = frames.size
 
-    @JvmField
     protected var frameIndex = -1
 
-    @JvmField
     internal val paused = AtomicBoolean(true)
 
-    @JvmField
-    internal val workerHandler = Handler(
+    private val workerHandler = Handler(
         FrameDecoderExecutor.getInstance()
             .getLooper(FrameDecoderExecutor.getInstance().generateTaskId())
     )
@@ -45,14 +42,12 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     private val renderListeners: MutableSet<RenderListener> =
         listOfNotNull(renderListener).toMutableSet()
 
-    @JvmField
-    protected val renderTask: Runnable = RenderTaskRunnable()
+    private val renderTask: Runnable = RenderTaskRunnable()
 
     private val bitmapPool = BitmapPool()
     private val bitmapReaderManager = BitmapReaderManager(loader, readerFactory)
 
-    @JvmField
-    protected val cachedCanvas: MutableMap<Bitmap, Canvas> = WeakHashMap()
+    private val cachedCanvas: MutableMap<Bitmap, Canvas> = WeakHashMap()
 
     private var playCount: Int = 0
 
@@ -127,6 +122,9 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     protected fun recycleBitmap(bitmap: Bitmap?) = bitmapPool.recycle(bitmap)
 
+    protected fun getCanvas(bitmap: Bitmap): Canvas =
+        cachedCanvas.getOrPut(bitmap) { Canvas(bitmap) }
+
     internal fun canStep(): Boolean {
         if (!isRunning || frames.isEmpty()) {
             return false
@@ -181,7 +179,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
 
     @WorkerThread
     internal fun innerStart() {
-        paused.compareAndSet(true, false)
+        paused.set(false)
         val startTimeMillis = System.currentTimeMillis()
 
         if (frames.isEmpty()) {
@@ -259,14 +257,14 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected abstract fun release()
 
     fun resume() {
-        paused.compareAndSet(true, false)
+        paused.set(false)
         workerHandler.removeCallbacks(renderTask)
         workerHandler.post(renderTask)
     }
 
     fun pause() {
         workerHandler.removeCallbacks(renderTask)
-        paused.compareAndSet(false, true)
+        paused.set(true)
     }
 
     fun reset() = ensureWorkerExecute {

@@ -50,16 +50,17 @@ class APNGDecoder(
     override fun read(reader: APNGReader): Rect {
         val chunks = APNGParser.parse(reader)
         val otherChunks = mutableListOf<Chunk>()
-        var actl = false
+        var isAnimated = false
         var lastFrame: APNGFrame? = null
         var ihdrData: ByteArray? = ByteArray(0)
         var canvasWidth = 0
         var canvasHeight = 0
+
         for (chunk in chunks) {
             when (chunk) {
                 is ACTLChunk -> {
                     mLoopCount = chunk.num_plays
-                    actl = true
+                    isAnimated = true
                 }
                 is FCTLChunk -> {
                     val frame = APNGFrame(reader, chunk).also {
@@ -72,7 +73,7 @@ class APNGDecoder(
                 is FDATChunk ->
                     lastFrame?.imageChunks?.add(chunk)
                 is IDATChunk -> {
-                    if (!actl) {
+                    if (!isAnimated) {
                         // If it is a non-APNG image, only PNG will be decoded
                         val frame = StillFrame(reader).apply {
                             frameWidth = canvasWidth
@@ -106,11 +107,8 @@ class APNGDecoder(
                     width = fullRect.width() / sampleSize,
                     height = fullRect.height() / sampleSize
                 ) ?: return
-            var canvas = cachedCanvas[bitmap]
-            if (canvas == null) {
-                canvas = Canvas(bitmap)
-                cachedCanvas[bitmap] = canvas
-            }
+            val canvas = getCanvas(bitmap)
+
             if (frame is APNGFrame) {
                 // Restore the current frame from the cache
                 frameBuffer?.rewind()
