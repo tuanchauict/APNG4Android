@@ -30,7 +30,7 @@ class APNGDecoder(
 
     private class SnapShot {
         var disposeOp: Byte = 0
-        var dstRect = Rect()
+        val dstRect = Rect()
         var byteBuffer: ByteBuffer? = null
     }
 
@@ -94,7 +94,6 @@ class APNGDecoder(
             }
         }
         val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
-        frameBuffer = ByteBuffer.allocate(bufferSizeBytes)
         snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
@@ -152,8 +151,12 @@ class APNGDecoder(
                     )
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
                 }
-                snapShot.dstRect[frame.frameX / sampleSize, frame.frameY / sampleSize, (frame.frameX + frame.frameWidth) / sampleSize] =
+                snapShot.dstRect.set(
+                    frame.frameX / sampleSize,
+                    frame.frameY / sampleSize,
+                    (frame.frameX + frame.frameWidth) / sampleSize,
                     (frame.frameY + frame.frameHeight) / sampleSize
+                )
                 canvas.restore()
             }
             // Start actually drawing the content of the current frame

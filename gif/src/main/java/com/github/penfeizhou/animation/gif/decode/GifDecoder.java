@@ -87,7 +87,6 @@ public class GifDecoder extends FrameSeqDecoder<GifReader, GifWriter> {
                 mLoopCount = ((ApplicationExtension) block).loopCount;
             }
         }
-        frameBuffer = ByteBuffer.allocate((canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4);
         snapShot.byteBuffer = ByteBuffer.allocate((canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4);
         if (globalColorTable != null && bgColorIndex >= 0 && bgColorIndex < globalColorTable.getColorTable().length) {
             int abgr = globalColorTable.getColorTable()[bgColorIndex];
