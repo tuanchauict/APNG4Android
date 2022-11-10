@@ -1,6 +1,5 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff

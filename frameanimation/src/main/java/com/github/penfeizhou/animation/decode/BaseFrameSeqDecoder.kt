@@ -74,8 +74,8 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     @Volatile
     protected var fullRect: Rect? = null
 
-    @JvmField
     var sampleSize = 1
+        internal set
 
     val isRunning: Boolean
         get() = state == State.RUNNING || state == State.INITIALIZING
@@ -90,7 +90,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     fun getBounds(): Rect {
         if (fullRect == null) {
             if (state == State.FINISHING) {
-                Log.e(TAG, " in finishing. Do not interrupt")
+                Log.e(TAG, "$debugInfo in finishing. Do not interrupt")
             }
             val thread = Thread.currentThread()
             ensureWorkerExecute {

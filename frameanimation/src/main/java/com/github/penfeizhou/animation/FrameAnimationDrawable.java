@@ -15,7 +15,9 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder;
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
 import com.github.penfeizhou.animation.loader.Loader;
 
 import java.lang.ref.WeakReference;
@@ -34,7 +36,7 @@ import androidx.vectordrawable.graphics.drawable.Animatable2Compat;
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, ?>> extends Drawable implements Animatable2Compat, FrameSeqDecoder.RenderListener {
+public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?, ?>> extends Drawable implements Animatable2Compat, BaseFrameSeqDecoder.RenderListener {
     private static final String TAG = FrameAnimationDrawable.class.getSimpleName();
     private final Paint paint = new Paint();
     private final Decoder frameSeqDecoder;
@@ -183,14 +185,15 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, 
     public void setBounds(int left, int top, int right, int bottom) {
         super.setBounds(left, top, right, bottom);
         boolean sampleSizeChanged = frameSeqDecoder.setDesiredSize(getBounds().width(), getBounds().height());
+        int sampleSize = frameSeqDecoder.getSampleSize();
         matrix.setScale(
-                1.0f * getBounds().width() * frameSeqDecoder.sampleSize / frameSeqDecoder.getBounds().width(),
-                1.0f * getBounds().height() * frameSeqDecoder.sampleSize / frameSeqDecoder.getBounds().height());
+                1.0f * getBounds().width() * sampleSize / frameSeqDecoder.getBounds().width(),
+                1.0f * getBounds().height() * sampleSize / frameSeqDecoder.getBounds().height());
 
         if (sampleSizeChanged)
             this.bitmap = Bitmap.createBitmap(
-                    frameSeqDecoder.getBounds().width() / frameSeqDecoder.sampleSize,
-                    frameSeqDecoder.getBounds().height() / frameSeqDecoder.sampleSize,
+                    frameSeqDecoder.getBounds().width() / sampleSize,
+                    frameSeqDecoder.getBounds().height() / sampleSize,
                     Bitmap.Config.ARGB_8888);
     }
 
@@ -220,9 +223,10 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder<?, 
             return;
         }
         if (this.bitmap == null || this.bitmap.isRecycled()) {
+            int sampleSize = frameSeqDecoder.getSampleSize();
             this.bitmap = Bitmap.createBitmap(
-                    frameSeqDecoder.getBounds().width() / frameSeqDecoder.sampleSize,
-                    frameSeqDecoder.getBounds().height() / frameSeqDecoder.sampleSize,
+                    frameSeqDecoder.getBounds().width() / sampleSize,
+                    frameSeqDecoder.getBounds().height() / sampleSize,
                     Bitmap.Config.ARGB_8888);
         }
         byteBuffer.rewind();

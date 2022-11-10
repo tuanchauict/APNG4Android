@@ -47,11 +47,7 @@ abstract class FrameSeqDecoder2<R : Reader, W : Writer>(
             bound.width() / desiredWidth,
             bound.height() / desiredHeight
         )
-        var sample = 1
-        while (sample * 2 <= radio) {
-            sample *= 2
-        }
-        return sample
+        return if (radio > 0) radio.takeHighestOneBit() else 1
     }
 
     @Throws(IOException::class)
