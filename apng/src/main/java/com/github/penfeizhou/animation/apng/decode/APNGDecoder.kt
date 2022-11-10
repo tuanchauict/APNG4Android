@@ -51,7 +51,7 @@ class APNGDecoder(
         val otherChunks = mutableListOf<Chunk>()
         var isAnimated = false
         var lastFrame: APNGFrame? = null
-        var ihdrData: ByteArray? = ByteArray(0)
+        var ihdrData = ByteArray(0)
         var canvasWidth = 0
         var canvasHeight = 0
 
@@ -62,10 +62,7 @@ class APNGDecoder(
                     isAnimated = true
                 }
                 is FCTLChunk -> {
-                    val frame = APNGFrame(reader, chunk).also {
-                        it.prefixChunks = otherChunks
-                        it.ihdrData = ihdrData
-                    }
+                    val frame = APNGFrame(reader, chunk, ihdrData, otherChunks)
                     frames.add(frame)
                     lastFrame = frame
                 }
