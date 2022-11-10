@@ -9,6 +9,7 @@ import com.github.penfeizhou.animation.apng.io.APNGWriter
 import com.github.penfeizhou.animation.decode.Frame
 import java.io.IOException
 import java.util.zip.CRC32
+import kotlin.concurrent.getOrSet
 
 class APNGFrame internal constructor(
     reader: APNGReader,
@@ -20,15 +21,6 @@ class APNGFrame internal constructor(
     val dispose_op: Byte
 
     internal val imageChunks: MutableList<Chunk> = mutableListOf()
-    private val cRC32: CRC32
-        get() {
-            var crc32 = sCRC32.get()
-            if (crc32 == null) {
-                crc32 = CRC32()
-                sCRC32.set(crc32)
-            }
-            return crc32
-        }
 
     init {
         blend_op = fctlChunk.blend_op
@@ -49,6 +41,49 @@ class APNGFrame internal constructor(
         frameY = fctlChunk.y_offset
     }
 
+    override fun draw(
+        canvas: Canvas,
+        paint: Paint,
+        sampleSize: Int,
+        reusedBitmap: Bitmap,
+        writer: APNGWriter
+    ): Bitmap? {
+        try {
+            val length = encode(writer)
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = false
+                inSampleSize = sampleSize
+                inMutable = true
+                inBitmap = reusedBitmap
+            }
+            val bytes = writer.toByteArray()
+            val bitmap: Bitmap = try {
+                BitmapFactory.decodeByteArray(bytes, 0, length, options)
+            } catch (e: IllegalArgumentException) {
+                // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
+                val optionsFixed = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = false
+                    inSampleSize = sampleSize
+                    inMutable = true
+                }
+                BitmapFactory.decodeByteArray(bytes, 0, length, optionsFixed)
+            }
+            srcRect.left = 0
+            srcRect.top = 0
+            srcRect.right = bitmap.width
+            srcRect.bottom = bitmap.height
+            dstRect.left = (frameX.toFloat() / sampleSize).toInt()
+            dstRect.top = (frameY.toFloat() / sampleSize).toInt()
+            dstRect.right = (frameX.toFloat() / sampleSize + bitmap.width).toInt()
+            dstRect.bottom = (frameY.toFloat() / sampleSize + bitmap.height).toInt()
+            canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
+            return bitmap
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
     @Throws(IOException::class)
     private fun encode(apngWriter: APNGWriter): Int {
         var fileSize = 8 + 13 + 12
@@ -60,15 +95,18 @@ class APNGFrame internal constructor(
 
         //imageChunks
         for (chunk in imageChunks) {
-            if (chunk is IDATChunk) {
-                fileSize += chunk.length + 12
-            } else if (chunk is FDATChunk) {
-                fileSize += chunk.length + 8
+            fileSize += when (chunk) {
+                is IDATChunk -> chunk.length + 12
+                is FDATChunk -> chunk.length + 8
+                else -> 0
             }
         }
-        fileSize += sPNGEndChunk.size
+
+        fileSize += PNG_END_CHUNK.size
+
         apngWriter.reset(fileSize)
-        apngWriter.putBytes(sPNGSignatures)
+        apngWriter.putBytes(PNG_SIGNATURES)
+
         //IHDR Chunk
         apngWriter.writeInt(13)
         var start = apngWriter.position()
@@ -76,7 +114,7 @@ class APNGFrame internal constructor(
         apngWriter.writeInt(frameWidth)
         apngWriter.writeInt(frameHeight)
         apngWriter.putBytes(ihdrData)
-        val crc32 = cRC32
+        val crc32 = CRC32_THREAD_LOCAL.getOrSet { CRC32() }
         crc32.reset()
         crc32.update(apngWriter.toByteArray(), start, 17)
         apngWriter.writeInt(crc32.value.toInt())
@@ -113,55 +151,13 @@ class APNGFrame internal constructor(
             }
         }
         //endChunk
-        apngWriter.putBytes(sPNGEndChunk)
+        apngWriter.putBytes(PNG_END_CHUNK)
         return fileSize
     }
 
-    override fun draw(
-        canvas: Canvas,
-        paint: Paint,
-        sampleSize: Int,
-        reusedBitmap: Bitmap,
-        writer: APNGWriter
-    ): Bitmap? {
-        try {
-            val length = encode(writer)
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = false
-            options.inSampleSize = sampleSize
-            options.inMutable = true
-            options.inBitmap = reusedBitmap
-            val bytes = writer.toByteArray()
-            var bitmap: Bitmap
-            try {
-                bitmap = BitmapFactory.decodeByteArray(bytes, 0, length, options)
-            } catch (e: IllegalArgumentException) {
-                // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
-                val optionsFixed = BitmapFactory.Options()
-                optionsFixed.inJustDecodeBounds = false
-                optionsFixed.inSampleSize = sampleSize
-                optionsFixed.inMutable = true
-                bitmap = BitmapFactory.decodeByteArray(bytes, 0, length, optionsFixed)
-            }
-            srcRect.left = 0
-            srcRect.top = 0
-            srcRect.right = bitmap.width
-            srcRect.bottom = bitmap.height
-            dstRect.left = (frameX.toFloat() / sampleSize).toInt()
-            dstRect.top = (frameY.toFloat() / sampleSize).toInt()
-            dstRect.right = (frameX.toFloat() / sampleSize + bitmap.width).toInt()
-            dstRect.bottom = (frameY.toFloat() / sampleSize + bitmap.height).toInt()
-            canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
-            return bitmap
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
     companion object {
-        private val sPNGSignatures = byteArrayOf(137.toByte(), 80, 78, 71, 13, 10, 26, 10)
-        private val sPNGEndChunk = byteArrayOf(
+        private val PNG_SIGNATURES = byteArrayOf(137.toByte(), 80, 78, 71, 13, 10, 26, 10)
+        private val PNG_END_CHUNK = byteArrayOf(
             0,
             0,
             0,
@@ -175,6 +171,6 @@ class APNGFrame internal constructor(
             0x60,
             0x82.toByte()
         )
-        private val sCRC32 = ThreadLocal<CRC32>()
+        private val CRC32_THREAD_LOCAL = ThreadLocal<CRC32>()
     }
 }
