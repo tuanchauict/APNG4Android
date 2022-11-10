@@ -14,6 +14,7 @@ import java.io.InputStream
  * @CreateDate: 2019-05-13
  */
 object APNGParser {
+    @Suppress("unused")
     fun isAPNG(filePath: String?): Boolean {
         var inputStream: InputStream? = null
         return try {
@@ -32,6 +33,7 @@ object APNGParser {
         }
     }
 
+    @Suppress("unused")
     fun isAPNG(context: Context, assetPath: String?): Boolean {
         var inputStream: InputStream? = null
         return try {
@@ -50,6 +52,7 @@ object APNGParser {
         }
     }
 
+    @Suppress("unused")
     fun isAPNG(context: Context, resId: Int): Boolean {
         var inputStream: InputStream? = null
         return try {
