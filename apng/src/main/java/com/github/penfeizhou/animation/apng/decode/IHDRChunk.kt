@@ -18,7 +18,7 @@ import java.io.IOException
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal class IHDRChunk : Chunk() {
+internal class IHDRChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC) {
     /**
      * 图像宽度，以像素为单位
      */

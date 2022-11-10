@@ -14,11 +14,8 @@ import java.io.IOException
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal sealed class Chunk {
-    var length = 0
-    var fourcc = 0
+internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
     var crc = 0
-    var offset = 0
 
     @Throws(IOException::class)
     fun parse(reader: APNGReader) {
@@ -49,4 +46,4 @@ internal sealed class Chunk {
     }
 }
 
-internal class GeneralChunk : Chunk()
+internal class GeneralChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)

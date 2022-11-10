@@ -8,7 +8,7 @@ import java.io.IOException
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal class FDATChunk : Chunk() {
+internal class FDATChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC) {
     var sequence_number = 0
     @Throws(IOException::class)
     override fun innerParse(reader: APNGReader) {

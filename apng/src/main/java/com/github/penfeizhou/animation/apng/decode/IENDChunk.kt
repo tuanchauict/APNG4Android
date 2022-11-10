@@ -5,7 +5,7 @@ package com.github.penfeizhou.animation.apng.decode
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal class IENDChunk : Chunk() {
+internal class IENDChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC) {
     companion object {
         val ID = fourCCToInt("IEND")
     }

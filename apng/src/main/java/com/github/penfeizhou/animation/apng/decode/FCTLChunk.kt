@@ -8,7 +8,7 @@ import java.io.IOException
  * @CreateDate: 2019/3/27
  * @see {link=https://developer.mozilla.org/en-US/docs/Mozilla/Tech/APNG..27fcTL.27:_The_Frame_Control_Chunk}
  */
-internal class FCTLChunk : Chunk() {
+internal class FCTLChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC) {
     var sequence_number = 0
     /**
      * x_offset >= 0
