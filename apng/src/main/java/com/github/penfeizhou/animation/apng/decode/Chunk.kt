@@ -47,3 +47,9 @@ internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
 }
 
 internal class GeneralChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)
+
+internal sealed class DATChunk(
+    offset: Int,
+    length: Int,
+    fourCC: Int
+) : Chunk(offset, length, fourCC)
