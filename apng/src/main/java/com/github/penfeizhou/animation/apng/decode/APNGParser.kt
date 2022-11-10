@@ -118,7 +118,7 @@ object APNGParser {
             IDATChunk.ID -> IDATChunk()
             IENDChunk.ID -> IENDChunk()
             IHDRChunk.ID -> IHDRChunk()
-            else -> Chunk()
+            else -> GeneralChunk()
         }
         chunk.offset = offset
         chunk.length = size

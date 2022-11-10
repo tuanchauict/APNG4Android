@@ -86,8 +86,8 @@ class APNGDecoder(
                     canvasHeight = chunk.height
                     ihdrData = chunk.data
                 }
+                is GeneralChunk -> otherChunks.add(chunk)
                 is IENDChunk -> Unit
-                else -> otherChunks.add(chunk)
             }
         }
         val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4

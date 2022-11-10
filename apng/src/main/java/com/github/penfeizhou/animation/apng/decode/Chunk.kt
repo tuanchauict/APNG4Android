@@ -6,15 +6,15 @@ import android.text.TextUtils
 import java.io.IOException
 
 /**
- * @Description: Length (长度)	4字节	指定数据块中数据域的长度，其长度不超过(231－1)字节
- * Chunk Type Code (数据块类型码)	4字节	数据块类型码由ASCII字母(A-Z和a-z)组成
- * Chunk Data (数据块数据)	可变长度	存储按照Chunk Type Code指定的数据
- * CRC (循环冗余检测)	4字节	存储用来检测是否有错误的循环冗余码
+ * Length 4 bytes Specifies the length of the data field in the data block, which should not exceed (231-1) bytes
+ * Chunk Type Code 4 bytes The Chunk Type Code consists of ASCII letters (A-Z and a-z).
+ * Chunk Data Variable length Stores the data specified by the Chunk Type Code
+ * CRC (Cyclic Redundancy Check) 4 bytes Stores the cyclic redundancy code used to check for errors
  * @Link https://www.w3.org/TR/PNG
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal open class Chunk {
+internal sealed class Chunk {
     var length = 0
     var fourcc = 0
     var crc = 0
@@ -37,13 +37,16 @@ internal open class Chunk {
 
     companion object {
         @JvmStatic
-        fun fourCCToInt(fourCC: String): Int {
-            return if (TextUtils.isEmpty(fourCC) || fourCC.length != 4) {
+        fun fourCCToInt(fourCC: String): Int =
+            if (TextUtils.isEmpty(fourCC) || fourCC.length != 4) {
                 -0x45210001
-            } else (fourCC[0].code and 0xff
-                    or (fourCC[1].code and 0xff shl 8
-                    ) or (fourCC[2].code and 0xff shl 16
-                    ) or (fourCC[3].code and 0xff shl 24))
-        }
+            } else {
+                (fourCC[0].code and 0xff
+                        or (fourCC[1].code and 0xff shl 8)
+                        or (fourCC[2].code and 0xff shl 16)
+                        or (fourCC[3].code and 0xff shl 24))
+            }
     }
 }
+
+internal class GeneralChunk : Chunk()
