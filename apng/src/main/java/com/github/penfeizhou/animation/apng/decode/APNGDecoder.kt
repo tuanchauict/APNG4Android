@@ -7,7 +7,7 @@ import android.graphics.Rect
 import com.github.penfeizhou.animation.apng.io.APNGReader
 import com.github.penfeizhou.animation.apng.io.APNGWriter
 import com.github.penfeizhou.animation.decode.Frame
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -21,9 +21,9 @@ import java.nio.ByteBuffer
  * @CreateDate: 2019-05-13
  */
 class APNGDecoder(
-    loader: Loader?,
+    loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder<APNGReader, APNGWriter>(loader, renderListener, ::APNGReader) {
+) : FrameSeqDecoder2<APNGReader, APNGWriter>(loader, renderListener, ::APNGReader) {
     private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 

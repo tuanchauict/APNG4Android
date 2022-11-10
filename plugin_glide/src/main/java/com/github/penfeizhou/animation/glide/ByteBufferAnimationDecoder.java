@@ -8,7 +8,7 @@ import com.bumptech.glide.load.ResourceDecoder;
 import com.bumptech.glide.load.engine.Resource;
 import com.github.penfeizhou.animation.apng.decode.APNGDecoder;
 import com.github.penfeizhou.animation.apng.decode.APNGParser;
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
 import com.github.penfeizhou.animation.gif.decode.GifDecoder;
 import com.github.penfeizhou.animation.gif.decode.GifParser;
 import com.github.penfeizhou.animation.io.ByteBufferReader;
@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-14
  */
-public class ByteBufferAnimationDecoder implements ResourceDecoder<ByteBuffer, FrameSeqDecoder> {
+public class ByteBufferAnimationDecoder implements ResourceDecoder<ByteBuffer, FrameSeqDecoder2> {
 
     @Override
     public boolean handles(@NonNull ByteBuffer source, @NonNull Options options) {
@@ -36,7 +36,7 @@ public class ByteBufferAnimationDecoder implements ResourceDecoder<ByteBuffer, F
 
     @Nullable
     @Override
-    public Resource<FrameSeqDecoder> decode(@NonNull final ByteBuffer source, int width, int height, @NonNull Options options) throws IOException {
+    public Resource<FrameSeqDecoder2> decode(@NonNull final ByteBuffer source, int width, int height, @NonNull Options options) throws IOException {
         Loader loader = new ByteBufferLoader() {
             @Override
             public ByteBuffer getByteBuffer() {
@@ -44,7 +44,7 @@ public class ByteBufferAnimationDecoder implements ResourceDecoder<ByteBuffer, F
                 return source;
             }
         };
-        final FrameSeqDecoder decoder;
+        final FrameSeqDecoder2 decoder;
         if (WebPParser.isAWebP(new ByteBufferReader(source))) {
             decoder = new WebPDecoder(loader, null);
         } else if (APNGParser.isAPNG(new ByteBufferReader(source))) {
@@ -57,24 +57,24 @@ public class ByteBufferAnimationDecoder implements ResourceDecoder<ByteBuffer, F
         return new FrameSeqDecoderResource(decoder, source.limit());
     }
 
-    private static class FrameSeqDecoderResource implements Resource<FrameSeqDecoder> {
-        private final FrameSeqDecoder decoder;
+    private static class FrameSeqDecoderResource implements Resource<FrameSeqDecoder2> {
+        private final FrameSeqDecoder2 decoder;
         private final int size;
 
-        FrameSeqDecoderResource(FrameSeqDecoder decoder, int size) {
+        FrameSeqDecoderResource(FrameSeqDecoder2 decoder, int size) {
             this.decoder = decoder;
             this.size = size;
         }
 
         @NonNull
         @Override
-        public Class<FrameSeqDecoder> getResourceClass() {
-            return FrameSeqDecoder.class;
+        public Class<FrameSeqDecoder2> getResourceClass() {
+            return FrameSeqDecoder2.class;
         }
 
         @NonNull
         @Override
-        public FrameSeqDecoder get() {
+        public FrameSeqDecoder2 get() {
             return this.decoder;
         }
 

@@ -15,8 +15,11 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.vectordrawable.graphics.drawable.Animatable2Compat;
+
 import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder;
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
 import com.github.penfeizhou.animation.loader.Loader;
 
@@ -27,16 +30,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.vectordrawable.graphics.drawable.Animatable2Compat;
-
-/**
- * @Description: Frame animation drawable
- * @Author: pengfei.zhou
- * @CreateDate: 2019/3/27
- */
-public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?, ?>> extends Drawable implements Animatable2Compat, BaseFrameSeqDecoder.RenderListener {
+public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?, ?>>
+        extends Drawable implements Animatable2Compat, BaseFrameSeqDecoder.RenderListener {
     private static final String TAG = FrameAnimationDrawable.class.getSimpleName();
     private final Paint paint = new Paint();
     private final Decoder frameSeqDecoder;
@@ -97,11 +92,12 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?,
         this.noMeasure = noMeasure;
     }
 
-    protected abstract Decoder createFrameSeqDecoder(Loader streamLoader, FrameSeqDecoder.RenderListener listener);
+    protected abstract Decoder createFrameSeqDecoder(Loader streamLoader, BaseFrameSeqDecoder.RenderListener listener);
 
     /**
      * @param loopLimit <=0为无限播放,>0为实际播放次数
      */
+    @SuppressWarnings("unused")
     public void setLoopLimit(int loopLimit) {
         frameSeqDecoder.setLoopLimit(loopLimit);
     }
@@ -121,6 +117,7 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?,
         frameSeqDecoder.resume();
     }
 
+    @SuppressWarnings("unused")
     public boolean isPaused() {
         return frameSeqDecoder.isPaused();
     }
@@ -135,8 +132,8 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?,
     }
 
     private void innerStart() {
-        if (FrameSeqDecoder.DEBUG) {
-            Log.d(TAG, this.toString() + ",start");
+        if (BaseFrameSeqDecoder.DEBUG) {
+            Log.d(TAG, this + ",start");
         }
 
         this.frameSeqDecoder.addRenderListener(this);
@@ -155,8 +152,8 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?,
     }
 
     private void innerStop() {
-        if (FrameSeqDecoder.DEBUG) {
-            Log.d(TAG, this.toString() + ",stop");
+        if (BaseFrameSeqDecoder.DEBUG) {
+            Log.d(TAG, this + ",stop");
         }
 
         this.frameSeqDecoder.removeRenderListener(this);
@@ -247,8 +244,8 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?,
     public boolean setVisible(boolean visible, boolean restart) {
         hookRecordCallbacks();
         if (this.autoPlay) {
-            if (FrameSeqDecoder.DEBUG) {
-                Log.d(TAG, this.toString() + ",visible:" + visible + ",restart:" + restart);
+            if (BaseFrameSeqDecoder.DEBUG) {
+                Log.d(TAG, this + ",visible:" + visible + ",restart:" + restart);
             }
             if (visible) {
                 if (!isRunning()) {

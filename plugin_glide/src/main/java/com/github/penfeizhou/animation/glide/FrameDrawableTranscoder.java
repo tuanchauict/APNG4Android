@@ -9,10 +9,9 @@ import com.bumptech.glide.load.Options;
 import com.bumptech.glide.load.engine.Resource;
 import com.bumptech.glide.load.resource.drawable.DrawableResource;
 import com.bumptech.glide.load.resource.transcode.ResourceTranscoder;
-import com.bumptech.glide.util.Util;
 import com.github.penfeizhou.animation.apng.APNGDrawable;
 import com.github.penfeizhou.animation.apng.decode.APNGDecoder;
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
 import com.github.penfeizhou.animation.gif.GifDrawable;
 import com.github.penfeizhou.animation.gif.decode.GifDecoder;
 import com.github.penfeizhou.animation.webp.WebPDrawable;
@@ -23,12 +22,12 @@ import com.github.penfeizhou.animation.webp.decode.WebPDecoder;
  * @Author: pengfei.zhou
  * @CreateDate: 2020/8/21
  */
-class FrameDrawableTranscoder implements ResourceTranscoder<FrameSeqDecoder, Drawable> {
+class FrameDrawableTranscoder implements ResourceTranscoder<FrameSeqDecoder2, Drawable> {
 
     @Nullable
     @Override
-    public Resource<Drawable> transcode(@NonNull Resource<FrameSeqDecoder> toTranscode, @NonNull Options options) {
-        FrameSeqDecoder frameSeqDecoder = toTranscode.get();
+    public Resource<Drawable> transcode(@NonNull Resource<FrameSeqDecoder2> toTranscode, @NonNull Options options) {
+        FrameSeqDecoder2<?,?> frameSeqDecoder = toTranscode.get();
         boolean noMeasure = options.get(AnimationDecoderOption.NO_ANIMATION_BOUNDS_MEASURE);
         if (frameSeqDecoder instanceof APNGDecoder) {
             final APNGDrawable apngDrawable = new APNGDrawable((APNGDecoder) frameSeqDecoder);

@@ -10,7 +10,7 @@ import com.bumptech.glide.load.engine.Resource;
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
 import com.bumptech.glide.load.resource.bitmap.BitmapResource;
 import com.bumptech.glide.load.resource.transcode.ResourceTranscoder;
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
 
 import java.io.IOException;
 
@@ -19,7 +19,7 @@ import java.io.IOException;
  * @Author: pengfei.zhou
  * @CreateDate: 2020/8/21
  */
-class FrameBitmapTranscoder implements ResourceTranscoder<FrameSeqDecoder, Bitmap> {
+class FrameBitmapTranscoder implements ResourceTranscoder<FrameSeqDecoder2, Bitmap> {
     private final BitmapPool bitmapPool;
 
     FrameBitmapTranscoder(BitmapPool bitmapPool) {
@@ -28,8 +28,8 @@ class FrameBitmapTranscoder implements ResourceTranscoder<FrameSeqDecoder, Bitma
 
     @Nullable
     @Override
-    public Resource<Bitmap> transcode(@NonNull Resource<FrameSeqDecoder> toTranscode, @NonNull Options options) {
-        FrameSeqDecoder frameSeqDecoder = toTranscode.get();
+    public Resource<Bitmap> transcode(@NonNull Resource<FrameSeqDecoder2> toTranscode, @NonNull Options options) {
+        FrameSeqDecoder2 frameSeqDecoder = toTranscode.get();
         try {
             Bitmap bitmap = frameSeqDecoder.getFrameBitmap(0);
             return BitmapResource.obtain(bitmap, bitmapPool);

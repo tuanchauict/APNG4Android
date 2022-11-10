@@ -2,14 +2,13 @@ package com.github.penfeizhou.animation.webp.decode
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.loader.Loader
 import com.github.penfeizhou.animation.webp.io.WebPReader
 import com.github.penfeizhou.animation.webp.io.WebPWriter
@@ -19,8 +18,8 @@ import java.io.IOException
  * @param loader         webp stream loader
  * @param renderListener callback for rendering
  */
-class WebPDecoder(loader: Loader?, renderListener: RenderListener?) :
-    FrameSeqDecoder<WebPReader, WebPWriter>(
+class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
+    FrameSeqDecoder2<WebPReader, WebPWriter>(
         loader,
         renderListener, ::WebPReader
     ) {

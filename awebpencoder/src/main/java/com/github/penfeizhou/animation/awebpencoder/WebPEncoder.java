@@ -2,12 +2,11 @@ package com.github.penfeizhou.animation.awebpencoder;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
-import android.util.Log;
-
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
 import com.github.penfeizhou.animation.gif.decode.ApplicationExtension;
 import com.github.penfeizhou.animation.gif.decode.Block;
 import com.github.penfeizhou.animation.gif.decode.ColorTable;
@@ -59,13 +58,13 @@ public class WebPEncoder {
         return webPEncoder;
     }
 
-    public static WebPEncoder fromDecoder(FrameSeqDecoder<?, ?> decoder) {
+    public static WebPEncoder fromDecoder(FrameSeqDecoder2<?, ?> decoder) {
         WebPEncoder webPEncoder = new WebPEncoder();
         webPEncoder.loadDecoder(decoder);
         return webPEncoder;
     }
 
-    private void loadDecoder(FrameSeqDecoder<?, ?> decoder) {
+    private void loadDecoder(FrameSeqDecoder2<?, ?> decoder) {
         decoder.getBounds();
         int frameCount = decoder.getFrameCount();
         List<Integer> delay = new ArrayList<>();

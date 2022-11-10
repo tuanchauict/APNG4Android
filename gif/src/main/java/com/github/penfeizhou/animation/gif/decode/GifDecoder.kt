@@ -1,12 +1,11 @@
 package com.github.penfeizhou.animation.gif.decode
 
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
-import com.github.penfeizhou.animation.decode.FrameSeqDecoder
+import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.gif.io.GifReader
 import com.github.penfeizhou.animation.gif.io.GifWriter
 import com.github.penfeizhou.animation.io.Reader
@@ -19,8 +18,8 @@ import java.nio.ByteBuffer
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-16
  */
-class GifDecoder(loader: Loader?, renderListener: RenderListener?) :
-    FrameSeqDecoder<GifReader, GifWriter>(
+class GifDecoder(loader: Loader, renderListener: RenderListener?) :
+    FrameSeqDecoder2<GifReader, GifWriter>(
         loader,
         renderListener,
         { `in`: Reader? -> GifReader(`in`) }) {
