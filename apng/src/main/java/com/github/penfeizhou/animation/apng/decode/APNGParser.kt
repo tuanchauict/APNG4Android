@@ -110,7 +110,7 @@ object APNGParser {
     private fun parseChunk(reader: APNGReader): Chunk {
         val offset = reader.position()
         val size = reader.readInt()
-        val chunk: Chunk = when (val fourCC = reader.readFourCC()) {
+        val chunk = when (val fourCC = reader.readFourCC()) {
             ACTLChunk.ID -> ACTLChunk(offset, size, fourCC)
             FCTLChunk.ID -> FCTLChunk(offset, size, fourCC)
             FDATChunk.ID -> FDATChunk(offset, size, fourCC)

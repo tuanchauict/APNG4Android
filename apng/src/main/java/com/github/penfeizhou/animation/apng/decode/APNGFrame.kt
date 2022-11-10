@@ -20,7 +20,7 @@ class APNGFrame internal constructor(
     val blend_op: Byte
     val dispose_op: Byte
 
-    internal val imageChunks: MutableList<Chunk> = mutableListOf()
+    internal val imageChunks: MutableList<DATChunk> = mutableListOf()
 
     init {
         blend_op = fctlChunk.blend_op
@@ -98,7 +98,6 @@ class APNGFrame internal constructor(
             fileSize += when (chunk) {
                 is IDATChunk -> chunk.length + 12
                 is FDATChunk -> chunk.length + 8
-                else -> 0
             }
         }
 
@@ -131,23 +130,26 @@ class APNGFrame internal constructor(
         }
         //imageChunks
         for (chunk in imageChunks) {
-            if (chunk is IDATChunk) {
-                reader.reset()
-                reader.skip(chunk.offset.toLong())
-                reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length + 12)
-                apngWriter.skip(chunk.length + 12)
-            } else if (chunk is FDATChunk) {
-                apngWriter.writeInt(chunk.length - 4)
-                start = apngWriter.position()
-                apngWriter.writeFourCC(IDATChunk.ID)
-                reader.reset()
-                // skip to fdat data position
-                reader.skip((chunk.offset + 4 + 4 + 4).toLong())
-                reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length - 4)
-                apngWriter.skip(chunk.length - 4)
-                crc32.reset()
-                crc32.update(apngWriter.toByteArray(), start, chunk.length)
-                apngWriter.writeInt(crc32.value.toInt())
+            when (chunk) {
+                is IDATChunk -> {
+                    reader.reset()
+                    reader.skip(chunk.offset.toLong())
+                    reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length + 12)
+                    apngWriter.skip(chunk.length + 12)
+                }
+                is FDATChunk -> {
+                    apngWriter.writeInt(chunk.length - 4)
+                    start = apngWriter.position()
+                    apngWriter.writeFourCC(IDATChunk.ID)
+                    reader.reset()
+                    // skip to fdat data position
+                    reader.skip((chunk.offset + 4 + 4 + 4).toLong())
+                    reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length - 4)
+                    apngWriter.skip(chunk.length - 4)
+                    crc32.reset()
+                    crc32.update(apngWriter.toByteArray(), start, chunk.length)
+                    apngWriter.writeInt(crc32.value.toInt())
+                }
             }
         }
         //endChunk
