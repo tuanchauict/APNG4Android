@@ -1,8 +1,7 @@
-package com.github.penfeizhou.animation.webp.decode;
+package com.github.penfeizhou.animation.webp.decode
 
-import com.github.penfeizhou.animation.webp.io.WebPReader;
-
-import java.io.IOException;
+import com.github.penfeizhou.animation.webp.io.WebPReader
+import java.io.IOException
 
 /**
  * For an animated image, this chunk contains the global parameters of the animation.
@@ -19,22 +18,26 @@ import java.io.IOException;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-11
  */
-public class ANIMChunk extends BaseChunk {
-    static final int ID = BaseChunk.fourCCToInt("ANIM");
+class ANIMChunk : BaseChunk() {
     /**
      * The default background color of the canvas in [Blue, Green, Red, Alpha] byte order.
      * This color MAY be used to fill the unused space on the canvas around the frames, as well as the transparent pixels of the first frame.
      * Background color is also used when disposal method is 1.
      */
-    int backgroundColor;
+    var backgroundColor = 0
+
     /**
      * The number of times to loop the animation. 0 means infinitely.
      */
-    int loopCount;
+    var loopCount = 0
+    @Throws(IOException::class)
+    public override fun innerParse(reader: WebPReader) {
+        backgroundColor = reader.readUInt32()
+        loopCount = reader.readUInt16()
+    }
 
-    @Override
-    void innerParse(WebPReader reader) throws IOException {
-        this.backgroundColor = reader.readUInt32();
-        this.loopCount = reader.readUInt16();
+    companion object {
+        @JvmField
+        val ID = fourCCToInt("ANIM")
     }
 }
