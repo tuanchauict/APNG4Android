@@ -1,28 +1,28 @@
-package com.github.penfeizhou.animation.gif.decode;
+package com.github.penfeizhou.animation.gif.decode
 
-import com.github.penfeizhou.animation.gif.io.GifReader;
-
-import java.io.IOException;
+import com.github.penfeizhou.animation.gif.io.GifReader
+import java.io.IOException
 
 /**
  * @Description: GraphicControlExtension
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-17
  */
-public class GraphicControlExtension extends ExtensionBlock {
-    private int blockSize;
-    private byte packedFields;
-    public int delayTime;
-    public int transparentColorIndex;
-
-    @Override
-    public void receive(GifReader reader) throws IOException {
-        blockSize = reader.peek() & 0xff;
-        packedFields = reader.peek();
-        delayTime = reader.readUInt16();
-        transparentColorIndex = reader.peek() & 0xff;
-        if (reader.peek() != 0) {
-            throw new GifParser.FormatException();
+class GraphicControlExtension : ExtensionBlock() {
+    private var blockSize = 0
+    private var packedFields: Byte = 0
+    @JvmField
+    var delayTime = 0
+    @JvmField
+    var transparentColorIndex = 0
+    @Throws(IOException::class)
+    override fun receive(reader: GifReader) {
+        blockSize = reader.peek().toInt() and 0xff
+        packedFields = reader.peek()
+        delayTime = reader.readUInt16()
+        transparentColorIndex = reader.peek().toInt() and 0xff
+        if (reader.peek().toInt() != 0) {
+            throw GifParser.FormatException()
         }
     }
 
@@ -39,8 +39,8 @@ public class GraphicControlExtension extends ExtensionBlock {
      * what was there prior to rendering the graphic.
      * 4-7 -    To be defined.
      */
-    public int disposalMethod() {
-        return packedFields >> 2 & 0x7;
+    fun disposalMethod(): Int {
+        return packedFields.toInt() shr 2 and 0x7
     }
 
     /**
@@ -49,38 +49,41 @@ public class GraphicControlExtension extends ExtensionBlock {
      * continue when user input is entered. The nature of the User input
      * is determined by the application (Carriage Return, Mouse Button
      * Click, etc.).
-     * <p>
+     *
+     *
      * Values :
      * 0 -   User input is not expected.
      * 1 -   User input is expected.
-     * <p>
+     *
+     *
      * When a Delay Time is used and the User Input Flag is set,
      * processing will continue when user input is received or when the
      * delay time expires, whichever occurs first.
      */
-    public boolean userInputFlag() {
-        return (packedFields & 0x2) == 0x2;
+    fun userInputFlag(): Boolean {
+        return packedFields.toInt() and 0x2 == 0x2
     }
 
     /**
      * When a Delay Time is used and the User Input Flag is set,
      * processing will continue when user input is received or when the
      * delay time expires, whichever occurs first.
-     * <p>
+     *
+     *
      * vi) Transparency Flag - Indicates whether a transparency index is
      * given in the Transparent Index field. (This field is the least
      * significant bit of the byte.)
-     * <p>
+     *
+     *
      * Values :
      * 0 -   Transparent Index is not given.
      * 1 -   Transparent Index is given.
      */
-    public boolean transparencyFlag() {
-        return (packedFields & 0x1) == 0x1;
+    fun transparencyFlag(): Boolean {
+        return packedFields.toInt() and 0x1 == 0x1
     }
 
-    @Override
-    public int size() {
-        return blockSize + 1;
+    override fun size(): Int {
+        return blockSize + 1
     }
 }
