@@ -20,7 +20,7 @@ import java.io.IOException;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-public class StillFrame extends Frame<Writer> {
+public class StillFrame extends Frame {
     @NonNull
     private final WebPReader reader;
 

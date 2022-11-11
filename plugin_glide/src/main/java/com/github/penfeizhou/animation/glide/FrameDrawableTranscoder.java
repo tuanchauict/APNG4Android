@@ -27,7 +27,7 @@ class FrameDrawableTranscoder implements ResourceTranscoder<FrameSeqDecoder2, Dr
     @Nullable
     @Override
     public Resource<Drawable> transcode(@NonNull Resource<FrameSeqDecoder2> toTranscode, @NonNull Options options) {
-        FrameSeqDecoder2<?,?> frameSeqDecoder = toTranscode.get();
+        FrameSeqDecoder2<?> frameSeqDecoder = toTranscode.get();
         boolean noMeasure = options.get(AnimationDecoderOption.NO_ANIMATION_BOUNDS_MEASURE);
         if (frameSeqDecoder instanceof APNGDecoder) {
             final APNGDrawable apngDrawable = new APNGDrawable((APNGDecoder) frameSeqDecoder);

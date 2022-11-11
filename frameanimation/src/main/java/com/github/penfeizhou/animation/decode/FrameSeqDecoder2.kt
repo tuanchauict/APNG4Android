@@ -4,16 +4,15 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.annotation.IntRange
 import com.github.penfeizhou.animation.io.Reader
-import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import kotlin.math.min
 
-abstract class FrameSeqDecoder2<R : Reader, W : Writer>(
+abstract class FrameSeqDecoder2<R : Reader>(
     loader: Loader,
     renderListener: RenderListener?,
     readerFactory: (Reader) -> R
-) : BaseFrameSeqDecoder<R, W>(loader, renderListener, readerFactory) {
+) : BaseFrameSeqDecoder<R>(loader, renderListener, readerFactory) {
 
     fun setDesiredSize(width: Int, height: Int): Boolean {
         val sample = getDesiredSample(width, height)

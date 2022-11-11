@@ -15,7 +15,7 @@ import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt24
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt32
 import java.io.IOException
 
-class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Frame<Writer>() {
+class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Frame() {
     val imagePayloadOffset: Int
     val imagePayloadSize: Int
     val blendingMethod: Boolean

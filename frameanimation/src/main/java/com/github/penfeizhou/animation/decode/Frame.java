@@ -15,7 +15,7 @@ import com.github.penfeizhou.animation.io.Writer;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-public abstract class Frame<W extends Writer> {
+public abstract class Frame {
     public int frameWidth;
     public int frameHeight;
     public int frameX;
@@ -26,5 +26,6 @@ public abstract class Frame<W extends Writer> {
     protected final Rect dstRect = new Rect();
 
     @Nullable
-    public abstract Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap, W writer);
+    public abstract Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap,
+                                Writer writer);
 }

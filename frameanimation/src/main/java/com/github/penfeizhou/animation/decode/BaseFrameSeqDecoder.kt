@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.annotation.WorkerThread
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.Reader
-import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -17,7 +16,7 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
-abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
+abstract class BaseFrameSeqDecoder<R : Reader>(
     protected val loader: Loader,
     renderListener: RenderListener?,
     readerFactory: (Reader) -> R
@@ -25,7 +24,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected var frameBuffer: ByteBuffer? = null
         private set
 
-    protected val frames: MutableList<Frame<W>> = mutableListOf()
+    protected val frames: MutableList<Frame> = mutableListOf()
 
     val frameCount: Int
         get() = frames.size
@@ -282,9 +281,9 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
-    protected abstract fun renderFrame(frame: Frame<W>)
+    protected abstract fun renderFrame(frame: Frame)
 
-    fun getFrame(index: Int): Frame<W>? = frames.getOrNull(index)
+    fun getFrame(index: Int): Frame? = frames.getOrNull(index)
 
     // TODO: Rename this method. Init canvas bounds is not appropriate anymore.
     @WorkerThread

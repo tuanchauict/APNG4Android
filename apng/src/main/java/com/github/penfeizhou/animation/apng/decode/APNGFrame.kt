@@ -16,7 +16,7 @@ class APNGFrame internal constructor(
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,
     private val prefixChunks: MutableList<Chunk>
-) : Frame<Writer>() {
+) : Frame() {
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
 

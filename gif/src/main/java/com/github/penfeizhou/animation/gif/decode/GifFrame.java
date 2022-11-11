@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import com.github.penfeizhou.animation.decode.Frame;
 import com.github.penfeizhou.animation.gif.io.GifReader;
 import com.github.penfeizhou.animation.gif.io.GifWriter;
+import com.github.penfeizhou.animation.io.Writer;
 
 import java.io.IOException;
 
@@ -19,7 +20,7 @@ import androidx.annotation.Nullable;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-16
  */
-public class GifFrame extends Frame<GifWriter> {
+public class GifFrame extends Frame {
     static {
         System.loadLibrary("animation-decoder-gif");
     }
@@ -74,7 +75,7 @@ public class GifFrame extends Frame<GifWriter> {
     }
 
     @Override
-    public Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap, GifWriter writer) {
+    public Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap, Writer writer) {
         try {
             writer.reset(frameWidth * frameHeight / (sampleSize * sampleSize));
             int[] pixels = writer.asIntArray();

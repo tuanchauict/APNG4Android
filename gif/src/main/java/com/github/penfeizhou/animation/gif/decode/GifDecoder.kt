@@ -18,11 +18,10 @@ import java.nio.ByteBuffer
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-16
  */
-class GifDecoder(loader: Loader, renderListener: RenderListener?) :
-    FrameSeqDecoder2<GifReader, GifWriter>(
-        loader,
-        renderListener,
-        { `in`: Reader? -> GifReader(`in`) }) {
+class GifDecoder(
+    loader: Loader,
+    renderListener: RenderListener?
+) : FrameSeqDecoder2<GifReader>(loader, renderListener, { `in`: Reader? -> GifReader(`in`) }) {
     private val paint = Paint().apply { isAntiAlias = true }
     private var bgColor = Color.TRANSPARENT
     private val snapShot = SnapShot()
@@ -79,7 +78,7 @@ class GifDecoder(loader: Loader, renderListener: RenderListener?) :
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(frame: Frame<GifWriter>) {
+    override fun renderFrame(frame: Frame) {
         val gifFrame = frame as GifFrame
         val bitmap =
             obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)

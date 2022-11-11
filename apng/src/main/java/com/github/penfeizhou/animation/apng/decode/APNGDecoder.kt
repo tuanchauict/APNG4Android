@@ -25,7 +25,7 @@ import java.nio.ByteOrder
 class APNGDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<APNGReader, Writer>(loader, renderListener, ::APNGReader) {
+) : FrameSeqDecoder2<APNGReader>(loader, renderListener, ::APNGReader) {
     private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 
@@ -97,7 +97,7 @@ class APNGDecoder(
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame<Writer>) {
+    override fun renderFrame(frame: Frame) {
         val fullRect = fullRect ?: return
         try {
             val bitmap =

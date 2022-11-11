@@ -19,11 +19,10 @@ import java.io.IOException
  * @param loader         webp stream loader
  * @param renderListener callback for rendering
  */
-class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
-    FrameSeqDecoder2<WebPReader, Writer>(
-        loader,
-        renderListener, ::WebPReader
-    ) {
+class WebPDecoder(
+    loader: Loader,
+    renderListener: RenderListener?
+) : FrameSeqDecoder2<WebPReader>(loader, renderListener, ::WebPReader) {
     private val mTransparentFillPaint: Paint = Paint().apply {
         color = Color.TRANSPARENT
         style = Paint.Style.FILL
@@ -86,7 +85,7 @@ class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame<Writer>) {
+    override fun renderFrame(frame: Frame) {
         if (fullRect == null) {
             return
         }
