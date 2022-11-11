@@ -7,11 +7,15 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.webp.io.WebPReader
-import com.github.penfeizhou.animation.webp.io.WebPWriter
+import com.github.penfeizhou.animation.webp.io.WebPWriter.put1Based
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putFourCC
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt24
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt32
 import java.io.IOException
 
-class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Frame<WebPWriter>() {
+class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Frame<Writer>() {
     val imagePayloadOffset: Int
     val imagePayloadSize: Int
     val blendingMethod: Boolean
@@ -34,7 +38,7 @@ class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Fra
         useAlpha = anmfChunk.alphChunk != null
     }
 
-    private fun encode(writer: WebPWriter): Int {
+    private fun encode(writer: Writer): Int {
         val vp8xPayloadSize = 10
         val size = 12 + (BaseChunk.CHUNCK_HEADER_OFFSET + vp8xPayloadSize) + imagePayloadSize
         writer.reset(size)
@@ -67,7 +71,7 @@ class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Fra
         paint: Paint,
         sampleSize: Int,
         reusedBitmap: Bitmap,
-        writer: WebPWriter
+        writer: Writer
     ): Bitmap {
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = false

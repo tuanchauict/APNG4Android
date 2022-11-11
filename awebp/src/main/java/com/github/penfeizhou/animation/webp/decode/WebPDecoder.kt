@@ -9,9 +9,10 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
+import com.github.penfeizhou.animation.io.ByteBufferWriter
+import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import com.github.penfeizhou.animation.webp.io.WebPReader
-import com.github.penfeizhou.animation.webp.io.WebPWriter
 import java.io.IOException
 
 /**
@@ -19,7 +20,7 @@ import java.io.IOException
  * @param renderListener callback for rendering
  */
 class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
-    FrameSeqDecoder2<WebPReader, WebPWriter>(
+    FrameSeqDecoder2<WebPReader, Writer>(
         loader,
         renderListener, ::WebPReader
     ) {
@@ -38,7 +39,7 @@ class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
     private var canvasHeight = 0
     private var alpha = false
     private var backgroundColor = 0
-    private val writer: WebPWriter by lazy { WebPWriter() }
+    private val writer: Writer by lazy { ByteBufferWriter() }
 
     override fun getLoopCount(): Int {
         return loopCount
@@ -85,7 +86,7 @@ class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame<WebPWriter>) {
+    override fun renderFrame(frame: Frame<Writer>) {
         if (fullRect == null) {
             return
         }
@@ -105,7 +106,7 @@ class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
                 canvas.drawColor(backgroundColor, PorterDuff.Mode.SRC)
             }
         } else {
-            val preFrame: Frame<WebPWriter> = frames[frameIndex - 1]
+            val preFrame = frames[frameIndex - 1]
             //Dispose to background color. Fill the rectangle on the canvas covered by the current frame with background color specified in the ANIM chunk.
             if (preFrame is AnimationFrame
                 && preFrame.disposalMethod

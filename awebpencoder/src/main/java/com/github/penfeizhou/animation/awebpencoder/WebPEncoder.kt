@@ -15,13 +15,19 @@ import com.github.penfeizhou.animation.gif.decode.LogicalScreenDescriptor
 import com.github.penfeizhou.animation.gif.io.GifReader
 import com.github.penfeizhou.animation.gif.io.GifWriter
 import com.github.penfeizhou.animation.io.ByteBufferReader
+import com.github.penfeizhou.animation.io.ByteBufferWriter
+import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import com.github.penfeizhou.animation.webp.decode.BaseChunk
 import com.github.penfeizhou.animation.webp.decode.ICCPChunk
 import com.github.penfeizhou.animation.webp.decode.VP8XChunk
 import com.github.penfeizhou.animation.webp.decode.WebPParser
 import com.github.penfeizhou.animation.webp.io.WebPReader
-import com.github.penfeizhou.animation.webp.io.WebPWriter
+import com.github.penfeizhou.animation.webp.io.WebPWriter.put1Based
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putFourCC
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt16
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt24
+import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt32
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -34,7 +40,7 @@ import java.nio.ByteBuffer
 class WebPEncoder {
     private var bgColor = 0
     private var loopCount = 0
-    private val writer = WebPWriter()
+    private val writer = ByteBufferWriter()
     private val frameInfoList: MutableList<FrameInfo> = ArrayList()
     private var quality = 80
     private val outputStream = ByteArrayOutputStream()
@@ -84,7 +90,7 @@ class WebPEncoder {
                     val gifFrame =
                         GifFrame(reader, globalColorTable, graphicControlExtension, block)
                     frames.add(gifFrame)
-                } else if (block is ApplicationExtension && "NETSCAPE2.0" == (block as ApplicationExtension).identifier) {
+                } else if (block is ApplicationExtension && "NETSCAPE2.0" == block.identifier) {
                     loopCount = block.loopCount
                 }
             }
@@ -142,8 +148,8 @@ class WebPEncoder {
 
     fun addFrame(frameInfo: FrameInfo): WebPEncoder {
         frameInfoList.add(frameInfo)
-        width = Math.max(width, frameInfo.bitmap!!.width)
-        height = Math.max(height, frameInfo.bitmap!!.height)
+        width = width.coerceAtLeast(frameInfo.bitmap!!.width)
+        height = height.coerceAtLeast(frameInfo.bitmap!!.height)
         return this
     }
 
@@ -155,8 +161,8 @@ class WebPEncoder {
         frameInfo.frameY = frameY
         frameInfo.duration = duration
         frameInfoList.add(frameInfo)
-        width = Math.max(width, bitmap.width)
-        height = Math.max(height, bitmap.height)
+        width = width.coerceAtLeast(bitmap.width)
+        height = height.coerceAtLeast(bitmap.height)
         return this
     }
 
@@ -263,7 +269,7 @@ class WebPEncoder {
     }
 
     @Throws(IOException::class)
-    private fun writeChunk(writer: WebPWriter, reader: WebPReader, chunk: BaseChunk) {
+    private fun writeChunk(writer: Writer, reader: WebPReader, chunk: BaseChunk) {
         writer.putUInt32(chunk.chunkFourCC)
         writer.putUInt32(chunk.payloadSize)
         reader.reset()
@@ -285,7 +291,7 @@ class WebPEncoder {
     }
 
     class FrameBuilder {
-        var frameInfo = FrameInfo()
+        private var frameInfo = FrameInfo()
         fun bitmap(bitmap: Bitmap?): FrameBuilder {
             frameInfo.bitmap = bitmap
             return this

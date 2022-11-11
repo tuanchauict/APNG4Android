@@ -20,7 +20,7 @@ import java.io.IOException;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-public class StillFrame extends Frame<WebPWriter> {
+public class StillFrame extends Frame<Writer> {
     @NonNull
     private final WebPReader reader;
 
@@ -31,7 +31,7 @@ public class StillFrame extends Frame<WebPWriter> {
     }
 
     @Override
-    public Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap, WebPWriter writer) {
+    public Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap, Writer writer) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = false;
         options.inSampleSize = sampleSize;
