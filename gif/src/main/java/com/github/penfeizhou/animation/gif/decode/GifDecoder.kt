@@ -8,7 +8,6 @@ import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.gif.io.GifReader
 import com.github.penfeizhou.animation.gif.io.GifWriter
-import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -21,7 +20,7 @@ import java.nio.ByteBuffer
 class GifDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<GifReader>(loader, renderListener, { `in`: Reader? -> GifReader(`in`) }) {
+) : FrameSeqDecoder2<GifReader>(loader, renderListener, ::GifReader) {
     private val paint = Paint().apply { isAntiAlias = true }
     private var bgColor = Color.TRANSPARENT
     private val snapShot = SnapShot()
