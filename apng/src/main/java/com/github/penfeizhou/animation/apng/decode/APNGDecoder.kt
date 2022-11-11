@@ -25,7 +25,7 @@ import java.nio.ByteOrder
 class APNGDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<FilterReader>(loader, renderListener, ::FilterReader) {
+) : FrameSeqDecoder2(loader, renderListener) {
     private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 

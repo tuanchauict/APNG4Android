@@ -22,7 +22,7 @@ import java.io.IOException
 class WebPDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<FilterReader>(loader, renderListener, ::FilterReader) {
+) : FrameSeqDecoder2(loader, renderListener) {
     private val mTransparentFillPaint: Paint = Paint().apply {
         color = Color.TRANSPARENT
         style = Paint.Style.FILL

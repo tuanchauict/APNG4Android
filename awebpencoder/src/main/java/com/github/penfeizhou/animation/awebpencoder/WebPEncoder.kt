@@ -45,7 +45,7 @@ class WebPEncoder {
     private val outputStream = ByteArrayOutputStream()
     private var width = 0
     private var height = 0
-    private fun loadDecoder(decoder: FrameSeqDecoder2<*>) {
+    private fun loadDecoder(decoder: FrameSeqDecoder2) {
         decoder.getBounds()
         val frameCount = decoder.frameCount
         val delay: MutableList<Int> = ArrayList()
@@ -337,7 +337,7 @@ class WebPEncoder {
         }
 
         @JvmStatic
-        fun fromDecoder(decoder: FrameSeqDecoder2<*>): WebPEncoder {
+        fun fromDecoder(decoder: FrameSeqDecoder2): WebPEncoder {
             val webPEncoder = WebPEncoder()
             webPEncoder.loadDecoder(decoder)
             return webPEncoder

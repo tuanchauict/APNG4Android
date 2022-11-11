@@ -1,23 +1,20 @@
 package com.github.penfeizhou.animation.decode
 
-import com.github.penfeizhou.animation.io.Reader
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 
-internal class BitmapReaderManager<R : Reader>(
-    private val loader: Loader,
-    private val readerFactory: (Reader) -> R
-) {
-    private var reader: R? = null
+internal class BitmapReaderManager(private val loader: Loader) {
+    private var reader: FilterReader? = null
 
     @Throws(IOException::class)
-    fun getReader(): R {
+    fun getReader(): FilterReader {
         val localReader = reader
         if (localReader != null) {
             localReader.reset()
             return localReader
         }
-        reader = readerFactory(loader.obtain())
+        reader = FilterReader(loader.obtain())
         return getReader()
     }
 

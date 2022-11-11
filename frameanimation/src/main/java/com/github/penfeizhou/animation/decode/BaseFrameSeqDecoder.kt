@@ -8,7 +8,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.annotation.WorkerThread
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
-import com.github.penfeizhou.animation.io.Reader
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -16,11 +16,7 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
-abstract class BaseFrameSeqDecoder<R : Reader>(
-    protected val loader: Loader,
-    renderListener: RenderListener?,
-    readerFactory: (Reader) -> R
-) {
+abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener: RenderListener?) {
     protected var frameBuffer: ByteBuffer? = null
         private set
 
@@ -44,7 +40,7 @@ abstract class BaseFrameSeqDecoder<R : Reader>(
     private val renderTask: Runnable = RenderTaskRunnable()
 
     private val bitmapPool = BitmapPool()
-    private val bitmapReaderManager = BitmapReaderManager(loader, readerFactory)
+    private val bitmapReaderManager = BitmapReaderManager(loader)
 
     private val cachedCanvas: MutableMap<Bitmap, Canvas> = WeakHashMap()
 
@@ -297,7 +293,7 @@ abstract class BaseFrameSeqDecoder<R : Reader>(
     }
 
     @Throws(IOException::class)
-    protected abstract fun read(reader: R): Rect
+    protected abstract fun read(reader: FilterReader): Rect
 
     fun getMemorySize(): Int {
         val frameBufferSizeBytes = frameBuffer?.capacity() ?: 0

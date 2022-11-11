@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2<?>>
+public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
         extends Drawable implements Animatable2Compat, BaseFrameSeqDecoder.RenderListener {
     private static final String TAG = FrameAnimationDrawable.class.getSimpleName();
     private final Paint paint = new Paint();
