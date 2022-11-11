@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode
 
-import com.github.penfeizhou.animation.gif.io.GifReader
+import com.github.penfeizhou.animation.gif.io.GifReader.readUInt16
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -16,7 +17,7 @@ class GraphicControlExtension : ExtensionBlock() {
     @JvmField
     var transparentColorIndex = 0
     @Throws(IOException::class)
-    override fun receive(reader: GifReader) {
+    override fun receive(reader: FilterReader) {
         blockSize = reader.peek().toInt() and 0xff
         packedFields = reader.peek()
         delayTime = reader.readUInt16()

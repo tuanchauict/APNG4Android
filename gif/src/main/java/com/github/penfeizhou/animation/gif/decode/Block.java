@@ -1,6 +1,6 @@
 package com.github.penfeizhou.animation.gif.decode;
 
-import com.github.penfeizhou.animation.gif.io.GifReader;
+import com.github.penfeizhou.animation.io.FilterReader;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import java.io.IOException;
  * @CreateDate: 2019-05-16
  */
 public interface Block {
-    void receive(GifReader reader) throws IOException;
+    void receive(FilterReader reader) throws IOException;
 
     int size();
 }

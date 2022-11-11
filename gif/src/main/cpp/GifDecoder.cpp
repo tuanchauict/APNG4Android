@@ -193,7 +193,7 @@ void uncompressLZW(
 
 
 static JNINativeMethod methods[] = {
-        {"uncompressLZW", "(Lcom/github/penfeizhou/animation/gif/io/GifReader;[II[IIIIZ[B)V", (void *) &uncompressLZW},
+        {"uncompressLZW", "(Lcom/github/penfeizhou/animation/io/FilterReader;[II[IIIIZ[B)V", (void *) &uncompressLZW},
 };
 
 int jniRegisterNativeMethods(JNIEnv *env, const char *className, const JNINativeMethod *gMethods,

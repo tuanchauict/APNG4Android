@@ -6,8 +6,8 @@ import android.graphics.PorterDuff
 import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
-import com.github.penfeizhou.animation.gif.io.GifReader
 import com.github.penfeizhou.animation.gif.io.GifWriter
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
 class GifDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<GifReader>(loader, renderListener, ::GifReader) {
+) : FrameSeqDecoder2<FilterReader>(loader, renderListener, ::FilterReader) {
     private val paint = Paint().apply { isAntiAlias = true }
     private var bgColor = Color.TRANSPARENT
     private val snapShot = SnapShot()
@@ -41,7 +41,7 @@ class GifDecoder(
     }
 
     @Throws(IOException::class)
-    override fun read(reader: GifReader): Rect {
+    override fun read(reader: FilterReader): Rect {
         val blocks = GifParser.parse(reader)
         var canvasWidth = 0
         var canvasHeight = 0

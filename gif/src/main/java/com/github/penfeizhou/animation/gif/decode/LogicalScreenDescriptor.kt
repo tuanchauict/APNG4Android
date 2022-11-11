@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode
 
-import com.github.penfeizhou.animation.gif.io.GifReader
+import com.github.penfeizhou.animation.gif.io.GifReader.readUInt16
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -169,7 +170,7 @@ class LogicalScreenDescriptor : Block {
     var bgColorIndex: Byte = 0
     var radio: Byte = 0
     @Throws(IOException::class)
-    override fun receive(reader: GifReader) {
+    override fun receive(reader: FilterReader) {
         screenWidth = reader.readUInt16()
         screenHeight = reader.readUInt16()
         flag = reader.peek()

@@ -12,10 +12,10 @@ import com.github.penfeizhou.animation.gif.decode.GifParser
 import com.github.penfeizhou.animation.gif.decode.GraphicControlExtension
 import com.github.penfeizhou.animation.gif.decode.ImageDescriptor
 import com.github.penfeizhou.animation.gif.decode.LogicalScreenDescriptor
-import com.github.penfeizhou.animation.gif.io.GifReader
 import com.github.penfeizhou.animation.gif.io.GifWriter
 import com.github.penfeizhou.animation.io.ByteBufferReader
 import com.github.penfeizhou.animation.io.ByteBufferWriter
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import com.github.penfeizhou.animation.webp.decode.BaseChunk
@@ -69,7 +69,7 @@ class WebPEncoder {
 
     private fun loadGif(loader: Loader) {
         try {
-            val reader = GifReader(loader.obtain())
+            val reader = FilterReader(loader.obtain())
             val blocks = GifParser.parse(reader)
             var globalColorTable: ColorTable? = null
             val frames: MutableList<GifFrame> = ArrayList()

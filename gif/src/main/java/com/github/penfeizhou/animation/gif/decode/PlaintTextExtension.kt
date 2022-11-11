@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode
 
-import com.github.penfeizhou.animation.gif.io.GifReader
+import com.github.penfeizhou.animation.gif.io.GifReader.readUInt16
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -11,7 +12,7 @@ import java.io.IOException
 class PlaintTextExtension : ExtensionBlock() {
     private val plainTextData: MutableList<DataSubBlock> = ArrayList()
     @Throws(IOException::class)
-    override fun receive(reader: GifReader) {
+    override fun receive(reader: FilterReader) {
         val blockSize = reader.peek().toInt()
         val x = reader.readUInt16()
         val y = reader.readUInt16()

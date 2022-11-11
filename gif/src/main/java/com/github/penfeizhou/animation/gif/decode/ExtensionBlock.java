@@ -1,6 +1,6 @@
 package com.github.penfeizhou.animation.gif.decode;
 
-import com.github.penfeizhou.animation.gif.io.GifReader;
+import com.github.penfeizhou.animation.io.FilterReader;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import java.io.IOException;
  * @CreateDate: 2019-05-17
  */
 public abstract class ExtensionBlock implements Block {
-    public static ExtensionBlock retrieve(GifReader reader) throws IOException {
+    public static ExtensionBlock retrieve(FilterReader reader) throws IOException {
         byte extensionLabel = reader.peek();
         ExtensionBlock extensionBlock;
         switch (extensionLabel) {

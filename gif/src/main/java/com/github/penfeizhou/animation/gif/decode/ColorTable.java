@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode;
 
 import com.github.penfeizhou.animation.gif.io.GifReader;
+import com.github.penfeizhou.animation.io.FilterReader;
 
 import java.io.IOException;
 
@@ -62,7 +63,7 @@ public class ColorTable implements Block {
     }
 
     @Override
-    public void receive(GifReader reader) throws IOException {
+    public void receive(FilterReader reader) throws IOException {
         for (int i = 0; i < this.colorTable.length; i++) {
             byte red = reader.peek();
             byte green = reader.peek();

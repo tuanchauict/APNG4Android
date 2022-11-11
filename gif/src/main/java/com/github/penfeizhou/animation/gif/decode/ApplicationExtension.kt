@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode
 
-import com.github.penfeizhou.animation.gif.io.GifReader
+import com.github.penfeizhou.animation.gif.io.GifReader.readUInt16
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -12,7 +13,7 @@ class ApplicationExtension : ExtensionBlock() {
     var loopCount = -1
     var identifier: String? = null
     @Throws(IOException::class)
-    override fun receive(reader: GifReader) {
+    override fun receive(reader: FilterReader) {
         val blockSize = reader.peek().toInt()
         val stringBuilder = StringBuilder()
         for (i in 0 until blockSize) {

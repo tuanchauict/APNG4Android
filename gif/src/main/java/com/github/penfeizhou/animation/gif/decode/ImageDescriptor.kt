@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode
 
-import com.github.penfeizhou.animation.gif.io.GifReader
+import com.github.penfeizhou.animation.gif.io.GifReader.readUInt16
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -154,7 +155,7 @@ class ImageDescriptor : Block {
     @JvmField
     var imageDataOffset = 0
     @Throws(IOException::class)
-    override fun receive(reader: GifReader) {
+    override fun receive(reader: FilterReader) {
         frameX = reader.readUInt16()
         frameY = reader.readUInt16()
         frameWidth = reader.readUInt16()

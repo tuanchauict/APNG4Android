@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import com.github.penfeizhou.animation.decode.Frame;
 import com.github.penfeizhou.animation.gif.io.GifReader;
 import com.github.penfeizhou.animation.gif.io.GifWriter;
+import com.github.penfeizhou.animation.io.FilterReader;
 import com.github.penfeizhou.animation.io.Writer;
 
 import java.io.IOException;
@@ -35,9 +36,9 @@ public class GifFrame extends Frame {
     private final boolean interlace;
 
     @NonNull
-    private final GifReader reader;
+    private final FilterReader reader;
 
-    public GifFrame(@NonNull GifReader reader,
+    public GifFrame(@NonNull FilterReader reader,
                     ColorTable globalColorTable,
                     @Nullable GraphicControlExtension graphicControlExtension,
                     ImageDescriptor imageDescriptor) {
@@ -116,7 +117,7 @@ public class GifFrame extends Frame {
                 dataBlock);
     }
 
-    private native void uncompressLZW(GifReader gifReader,
+    private native void uncompressLZW(FilterReader gifReader,
                                       int[] colorTable,
                                       int transparentColorIndex,
                                       int[] pixels,

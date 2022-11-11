@@ -2,7 +2,7 @@ package com.github.penfeizhou.animation.gif.decode;
 
 import android.content.Context;
 
-import com.github.penfeizhou.animation.gif.io.GifReader;
+import com.github.penfeizhou.animation.io.FilterReader;
 import com.github.penfeizhou.animation.io.Reader;
 import com.github.penfeizhou.animation.io.StreamReader;
 
@@ -80,7 +80,7 @@ public class GifParser {
 
     public static boolean isGif(Reader reader) {
         try {
-            GifReader gifReader = reader instanceof GifReader ? (GifReader) reader : new GifReader(reader);
+            FilterReader gifReader = reader instanceof FilterReader ? (FilterReader) reader : new FilterReader(reader);
             checkHeader(gifReader);
             return true;
         } catch (IOException e) {
@@ -91,7 +91,7 @@ public class GifParser {
         }
     }
 
-    public static List<Block> parse(GifReader reader) throws IOException {
+    public static List<Block> parse(FilterReader reader) throws IOException {
         checkHeader(reader);
         List<Block> blocks = new ArrayList<>();
         // Logical Screen Descriptor
@@ -132,7 +132,7 @@ public class GifParser {
     }
 
 
-    private static void checkHeader(GifReader reader) throws IOException {
+    private static void checkHeader(FilterReader reader) throws IOException {
         byte a;
         if (reader.peek() != 'G'
                 || reader.peek() != 'I'

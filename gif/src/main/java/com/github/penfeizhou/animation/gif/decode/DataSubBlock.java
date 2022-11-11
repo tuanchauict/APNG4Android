@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.gif.decode;
 
 import com.github.penfeizhou.animation.gif.io.GifReader;
+import com.github.penfeizhou.animation.io.FilterReader;
 
 import java.io.IOException;
 
@@ -19,7 +20,7 @@ public class DataSubBlock implements Block {
         this.blockSize = blockSize;
     }
 
-    public static DataSubBlock retrieve(GifReader reader) throws IOException {
+    public static DataSubBlock retrieve(FilterReader reader) throws IOException {
         int blockSize = reader.peek() & 0xff;
         if (blockSize == 0) {
             return sBlockTerminal;
@@ -31,7 +32,7 @@ public class DataSubBlock implements Block {
     }
 
     @Override
-    public void receive(GifReader reader) throws IOException {
+    public void receive(FilterReader reader) throws IOException {
         reader.skip(blockSize);
     }
 
