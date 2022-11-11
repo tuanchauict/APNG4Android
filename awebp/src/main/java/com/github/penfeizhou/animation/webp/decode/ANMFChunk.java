@@ -93,11 +93,11 @@ public class ANMFChunk extends BaseChunk {
     @Override
     void innerParse(WebPReader reader) throws IOException {
         int available = reader.available();
-        this.frameX = reader.getUInt24();
-        this.frameY = reader.getUInt24();
-        this.frameWidth = reader.get1Based();
-        this.frameHeight = reader.get1Based();
-        this.frameDuration = reader.getUInt24();
+        this.frameX = reader.readUInt24();
+        this.frameY = reader.readUInt24();
+        this.frameWidth = reader.read1Based();
+        this.frameHeight = reader.read1Based();
+        this.frameDuration = reader.readUInt24();
         this.flags = reader.peek();
         long bounds = available - payloadSize;
         while (reader.available() > bounds) {

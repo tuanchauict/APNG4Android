@@ -34,7 +34,7 @@ public class ANIMChunk extends BaseChunk {
 
     @Override
     void innerParse(WebPReader reader) throws IOException {
-        this.backgroundColor = reader.getUInt32();
-        this.loopCount = reader.getUInt16();
+        this.backgroundColor = reader.readUInt32();
+        this.loopCount = reader.readUInt16();
     }
 }

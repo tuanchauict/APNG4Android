@@ -62,8 +62,8 @@ public class VP8XChunk extends BaseChunk {
     void innerParse(WebPReader reader) throws IOException {
         flags = reader.peek();
         reader.skip(3);
-        canvasWidth = reader.get1Based();
-        canvasHeight = reader.get1Based();
+        canvasWidth = reader.read1Based();
+        canvasHeight = reader.read1Based();
     }
 
     /**

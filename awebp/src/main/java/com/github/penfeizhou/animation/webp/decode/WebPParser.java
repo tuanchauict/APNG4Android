@@ -121,8 +121,8 @@ public class WebPParser {
     static BaseChunk parseChunk(WebPReader reader) throws IOException {
         //@link {https://developers.google.com/speed/webp/docs/riff_container#riff_file_format}
         int offset = reader.position();
-        int chunkFourCC = reader.getFourCC();
-        int chunkSize = reader.getUInt32();
+        int chunkFourCC = reader.readFourCC();
+        int chunkSize = reader.readUInt32();
         BaseChunk chunk;
         if (VP8XChunk.ID == chunkFourCC) {
             chunk = new VP8XChunk();
