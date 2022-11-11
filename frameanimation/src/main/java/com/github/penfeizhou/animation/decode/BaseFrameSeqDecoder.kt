@@ -25,7 +25,7 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
     protected var frameBuffer: ByteBuffer? = null
         private set
 
-    protected val frames: MutableList<Frame<R, W>> = mutableListOf()
+    protected val frames: MutableList<Frame<W>> = mutableListOf()
 
     val frameCount: Int
         get() = frames.size
@@ -282,9 +282,9 @@ abstract class BaseFrameSeqDecoder<R : Reader, W : Writer>(
         ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
-    protected abstract fun renderFrame(frame: Frame<R, W>)
+    protected abstract fun renderFrame(frame: Frame<W>)
 
-    fun getFrame(index: Int): Frame<R, W>? = frames.getOrNull(index)
+    fun getFrame(index: Int): Frame<W>? = frames.getOrNull(index)
 
     // TODO: Rename this method. Init canvas bounds is not appropriate anymore.
     @WorkerThread

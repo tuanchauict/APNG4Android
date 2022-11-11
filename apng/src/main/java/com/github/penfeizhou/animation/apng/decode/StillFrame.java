@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+import androidx.annotation.NonNull;
+
 import com.github.penfeizhou.animation.apng.io.APNGReader;
 import com.github.penfeizhou.animation.apng.io.APNGWriter;
 import com.github.penfeizhou.animation.decode.Frame;
@@ -16,10 +18,12 @@ import java.io.IOException;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-public class StillFrame extends Frame<APNGReader, APNGWriter> {
+public class StillFrame extends Frame<APNGWriter> {
+    @NonNull
+    private final APNGReader reader;
 
-    public StillFrame(APNGReader reader) {
-        super(reader);
+    public StillFrame(@NonNull APNGReader reader) {
+        this.reader = reader;
     }
 
     @Override

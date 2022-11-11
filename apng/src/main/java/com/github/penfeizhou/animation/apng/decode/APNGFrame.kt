@@ -12,11 +12,11 @@ import java.util.zip.CRC32
 import kotlin.concurrent.getOrSet
 
 class APNGFrame internal constructor(
-    reader: APNGReader,
+    private val reader: APNGReader,
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,
     private val prefixChunks: MutableList<Chunk>
-) : Frame<APNGReader, APNGWriter>(reader) {
+) : Frame<APNGWriter>() {
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
 

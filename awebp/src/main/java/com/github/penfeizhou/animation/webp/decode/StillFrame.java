@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+import androidx.annotation.NonNull;
+
 import com.github.penfeizhou.animation.decode.Frame;
 import com.github.penfeizhou.animation.io.Reader;
 import com.github.penfeizhou.animation.io.Writer;
@@ -18,9 +20,12 @@ import java.io.IOException;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-public class StillFrame extends Frame<WebPReader, WebPWriter> {
-    public StillFrame(WebPReader reader, int width, int height) {
-        super(reader);
+public class StillFrame extends Frame<WebPWriter> {
+    @NonNull
+    private final WebPReader reader;
+
+    public StillFrame(@NonNull WebPReader reader, int width, int height) {
+        this.reader = reader;
         this.frameWidth = width;
         this.frameHeight = height;
     }

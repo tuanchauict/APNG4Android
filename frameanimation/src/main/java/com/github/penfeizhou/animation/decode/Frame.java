@@ -5,10 +5,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.github.penfeizhou.animation.io.Reader;
 import com.github.penfeizhou.animation.io.Writer;
 
 
@@ -17,9 +15,7 @@ import com.github.penfeizhou.animation.io.Writer;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-public abstract class Frame<R extends Reader, W extends Writer> {
-    @NonNull
-    protected final R reader;
+public abstract class Frame<W extends Writer> {
     public int frameWidth;
     public int frameHeight;
     public int frameX;
@@ -28,10 +24,6 @@ public abstract class Frame<R extends Reader, W extends Writer> {
 
     protected final Rect srcRect = new Rect();
     protected final Rect dstRect = new Rect();
-
-    public Frame(R reader) {
-        this.reader = reader;
-    }
 
     @Nullable
     public abstract Bitmap draw(Canvas canvas, Paint paint, int sampleSize, Bitmap reusedBitmap, W writer);

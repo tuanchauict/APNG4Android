@@ -10,6 +10,7 @@ import com.github.penfeizhou.animation.gif.io.GifWriter;
 
 import java.io.IOException;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 
@@ -18,7 +19,7 @@ import androidx.annotation.Nullable;
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-16
  */
-public class GifFrame extends Frame<GifReader, GifWriter> {
+public class GifFrame extends Frame<GifWriter> {
     static {
         System.loadLibrary("animation-decoder-gif");
     }
@@ -32,11 +33,14 @@ public class GifFrame extends Frame<GifReader, GifWriter> {
     private static final int DEFAULT_DELAY = 10;
     private final boolean interlace;
 
-    public GifFrame(GifReader reader,
+    @NonNull
+    private final GifReader reader;
+
+    public GifFrame(@NonNull GifReader reader,
                     ColorTable globalColorTable,
                     @Nullable GraphicControlExtension graphicControlExtension,
                     ImageDescriptor imageDescriptor) {
-        super(reader);
+        this.reader = reader;
         if (graphicControlExtension != null) {
             this.disposalMethod = graphicControlExtension.disposalMethod();
             frameDuration = ((graphicControlExtension.delayTime <= 0)

@@ -79,7 +79,7 @@ class GifDecoder(loader: Loader, renderListener: RenderListener?) :
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(frame: Frame<GifReader, GifWriter>) {
+    override fun renderFrame(frame: Frame<GifWriter>) {
         val gifFrame = frame as GifFrame
         val bitmap =
             obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)

@@ -7,28 +7,28 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 
+import androidx.annotation.NonNull;
+
 import com.github.penfeizhou.animation.decode.Frame;
 import com.github.penfeizhou.animation.webp.io.WebPReader;
 import com.github.penfeizhou.animation.webp.io.WebPWriter;
 
 import java.io.IOException;
 
-/**
- * @Description: AnimationFrame
- * @Author: pengfei.zhou
- * @CreateDate: 2019-05-12
- */
-public class AnimationFrame extends Frame<WebPReader, WebPWriter> {
+public class AnimationFrame extends Frame<WebPWriter> {
     final int imagePayloadOffset;
     final int imagePayloadSize;
     final boolean blendingMethod;
     final boolean disposalMethod;
     private final boolean useAlpha;
+    @NonNull
+    private final WebPReader reader;
+
     private static final PorterDuffXfermode PORTERDUFF_XFERMODE_SRC_OVER = new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER);
     private static final PorterDuffXfermode PORTERDUFF_XFERMODE_SRC = new PorterDuffXfermode(PorterDuff.Mode.SRC);
 
-    public AnimationFrame(WebPReader reader, ANMFChunk anmfChunk) {
-        super(reader);
+    public AnimationFrame(@NonNull WebPReader reader, ANMFChunk anmfChunk) {
+        this.reader = reader;
         this.frameWidth = anmfChunk.frameWidth;
         this.frameHeight = anmfChunk.frameHeight;
         this.frameX = anmfChunk.frameX;

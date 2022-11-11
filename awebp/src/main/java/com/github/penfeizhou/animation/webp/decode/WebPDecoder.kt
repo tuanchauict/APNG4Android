@@ -85,7 +85,7 @@ class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame<WebPReader, WebPWriter>) {
+    override fun renderFrame(frame: Frame<WebPWriter>) {
         if (fullRect == null) {
             return
         }
@@ -105,7 +105,7 @@ class WebPDecoder(loader: Loader, renderListener: RenderListener?) :
                 canvas.drawColor(backgroundColor, PorterDuff.Mode.SRC)
             }
         } else {
-            val preFrame: Frame<WebPReader, WebPWriter> = frames[frameIndex - 1]
+            val preFrame: Frame<WebPWriter> = frames[frameIndex - 1]
             //Dispose to background color. Fill the rectangle on the canvas covered by the current frame with background color specified in the ANIM chunk.
             if (preFrame is AnimationFrame
                 && preFrame.disposalMethod
