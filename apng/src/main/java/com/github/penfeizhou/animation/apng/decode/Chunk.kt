@@ -1,10 +1,9 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import kotlin.Throws
-import com.github.penfeizhou.animation.apng.io.APNGReader
 import android.text.TextUtils
 import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
+import kotlin.Throws
 
 /**
  * Length 4 bytes Specifies the length of the data field in the data block, which should not exceed (231-1) bytes
@@ -39,10 +38,12 @@ internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
             if (TextUtils.isEmpty(fourCC) || fourCC.length != 4) {
                 -0x45210001
             } else {
-                (fourCC[0].code and 0xff
+                (
+                    fourCC[0].code and 0xff
                         or (fourCC[1].code and 0xff shl 8)
                         or (fourCC[2].code and 0xff shl 16)
-                        or (fourCC[3].code and 0xff shl 24))
+                        or (fourCC[3].code and 0xff shl 24)
+                    )
             }
     }
 }

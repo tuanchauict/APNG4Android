@@ -30,6 +30,7 @@ internal class IHDRChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, 
      */
     var height = 0
     var data = ByteArray(5)
+
     @Throws(IOException::class)
     override fun innerParse(reader: FilterReader) {
         width = reader.readInt()

@@ -22,7 +22,6 @@ import com.github.penfeizhou.animation.webp.decode.BaseChunk
 import com.github.penfeizhou.animation.webp.decode.ICCPChunk
 import com.github.penfeizhou.animation.webp.decode.VP8XChunk
 import com.github.penfeizhou.animation.webp.decode.WebPParser
-import com.github.penfeizhou.animation.webp.io.WebPReader
 import com.github.penfeizhou.animation.webp.io.WebPWriter.put1Based
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putFourCC
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt16
@@ -179,25 +178,25 @@ class WebPEncoder {
         val vp8xPayloadSize = 10
         var size = 4
 
-        //header
+        // header
         writer.putFourCC("RIFF")
         writer.putUInt32(size)
         writer.putFourCC("WEBP")
 
-        //VP8X
+        // VP8X
         writer.putFourCC("VP8X")
         writer.putUInt32(vp8xPayloadSize)
         writer.putByte((0x10 or 0x2).toByte())
         writer.putUInt24(0)
         writer.put1Based(width)
         writer.put1Based(height)
-        //ANIM
+        // ANIM
         writer.putFourCC("ANIM")
         writer.putUInt32(6)
         writer.putUInt32(bgColor)
         writer.putUInt16(loopCount)
 
-        //ANMF
+        // ANMF
         for (frameInfo in frameInfoList) {
             encodeFrame(frameInfo)
         }
@@ -219,7 +218,7 @@ class WebPEncoder {
             return 0
         }
         val byteBuffer = ByteBuffer.wrap(outputStream.toByteArray(), 0, outputStream.size())
-        val reader = WebPReader(ByteBufferReader(byteBuffer))
+        val reader = FilterReader(ByteBufferReader(byteBuffer))
         try {
             val chunks = WebPParser.parse(reader)
             var payLoadSize = 16
@@ -269,7 +268,7 @@ class WebPEncoder {
     }
 
     @Throws(IOException::class)
-    private fun writeChunk(writer: Writer, reader: WebPReader, chunk: BaseChunk) {
+    private fun writeChunk(writer: Writer, reader: FilterReader, chunk: BaseChunk) {
         writer.putUInt32(chunk.chunkFourCC)
         writer.putUInt32(chunk.payloadSize)
         reader.reset()
@@ -329,6 +328,7 @@ class WebPEncoder {
 
     companion object {
         private val TAG = WebPEncoder::class.java.simpleName
+
         @Deprecated("")
         fun fromGif(loader: Loader): WebPEncoder {
             val webPEncoder = WebPEncoder()

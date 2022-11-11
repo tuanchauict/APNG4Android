@@ -71,6 +71,7 @@ internal class FCTLChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, 
      * Type of frame area rendering for this frame.
      */
     var blend_op: Byte = 0
+
     @Throws(IOException::class)
     override fun innerParse(reader: FilterReader) {
         sequence_number = reader.readInt()
@@ -104,7 +105,7 @@ internal class FCTLChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, 
         /**
          * blend_op` specifies whether the frame is to be alpha blended into the current output buffer content,
          * or whether it should completely replace its region in the output buffer.
-        ` */
+         ` */
         /**
          * All color components of the frame, including alpha, overwrite the current contents of the frame's output buffer region.
          */

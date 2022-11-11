@@ -12,6 +12,7 @@ import java.io.IOException
 class ApplicationExtension : ExtensionBlock() {
     var loopCount = -1
     var identifier: String? = null
+
     @Throws(IOException::class)
     override fun receive(reader: FilterReader) {
         val blockSize = reader.peek().toInt()

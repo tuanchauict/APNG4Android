@@ -169,6 +169,7 @@ class LogicalScreenDescriptor : Block {
     var flag: Byte = 0
     var bgColorIndex: Byte = 0
     var radio: Byte = 0
+
     @Throws(IOException::class)
     override fun receive(reader: FilterReader) {
         screenWidth = reader.readUInt16()

@@ -85,12 +85,12 @@ class APNGFrame internal constructor(
     private fun encode(writer: Writer): Int {
         var fileSize = 8 + 13 + 12
 
-        //prefixChunks
+        // prefixChunks
         for (chunk in prefixChunks) {
             fileSize += chunk.length + 12
         }
 
-        //imageChunks
+        // imageChunks
         for (chunk in imageChunks) {
             fileSize += when (chunk) {
                 is IDATChunk -> chunk.length + 12
@@ -103,7 +103,7 @@ class APNGFrame internal constructor(
         writer.reset(fileSize)
         writer.putBytes(PNG_SIGNATURES)
 
-        //IHDR Chunk
+        // IHDR Chunk
         writer.writeInt(13)
         var start = writer.position()
         writer.writeFourCC(IHDRChunk.ID)
@@ -115,7 +115,7 @@ class APNGFrame internal constructor(
         crc32.update(writer.toByteArray(), start, 17)
         writer.writeInt(crc32.value.toInt())
 
-        //prefixChunks
+        // prefixChunks
         for (chunk in prefixChunks) {
             if (chunk is IENDChunk) {
                 continue
@@ -125,7 +125,7 @@ class APNGFrame internal constructor(
             reader.read(writer.toByteArray(), writer.position(), chunk.length + 12)
             writer.skip(chunk.length + 12)
         }
-        //imageChunks
+        // imageChunks
         for (chunk in imageChunks) {
             when (chunk) {
                 is IDATChunk -> {
@@ -149,7 +149,7 @@ class APNGFrame internal constructor(
                 }
             }
         }
-        //endChunk
+        // endChunk
         writer.putBytes(PNG_END_CHUNK)
         return fileSize
     }

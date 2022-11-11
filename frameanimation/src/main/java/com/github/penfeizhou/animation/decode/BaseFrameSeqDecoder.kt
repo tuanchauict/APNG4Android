@@ -192,7 +192,8 @@ abstract class BaseFrameSeqDecoder<R : Reader>(
             TAG,
             """$debugInfo 
                 |Set state to running 
-                |cost = ${System.currentTimeMillis() - startTimeMillis}""".trimMargin()
+                |cost = ${System.currentTimeMillis() - startTimeMillis}
+            """.trimMargin()
         )
         state = State.RUNNING
 

@@ -4,24 +4,29 @@ import android.text.TextUtils
 import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
-
 object APNGReader {
     @Throws(IOException::class)
     fun FilterReader.readInt(): Int {
         val buf = ensureBytes()
         read(buf, 0, 4)
         return buf[3].toInt() and 0xFF or (
-                buf[2].toInt() and 0xFF shl 8) or (
-                buf[1].toInt() and 0xFF shl 16) or (
-                buf[0].toInt() and 0xFF shl 24)
+            buf[2].toInt() and 0xFF shl 8
+            ) or (
+            buf[1].toInt() and 0xFF shl 16
+            ) or (
+            buf[0].toInt() and 0xFF shl 24
+            )
     }
 
     @Throws(IOException::class)
     fun FilterReader.readShort(): Short {
         val buf = ensureBytes()
         read(buf, 0, 2)
-        return (buf[1].toInt() and 0xFF or (
-                buf[0].toInt() and 0xFF shl 8)).toShort()
+        return (
+            buf[1].toInt() and 0xFF or (
+                buf[0].toInt() and 0xFF shl 8
+                )
+            ).toShort()
     }
 
     /**

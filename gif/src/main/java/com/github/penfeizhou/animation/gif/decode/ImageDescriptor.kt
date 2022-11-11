@@ -141,19 +141,26 @@ import java.io.IOException
 class ImageDescriptor : Block {
     @JvmField
     var frameX = 0
+
     @JvmField
     var frameY = 0
+
     @JvmField
     var frameWidth = 0
+
     @JvmField
     var frameHeight = 0
     private var flag: Byte = 0
+
     @JvmField
     var localColorTable: ColorTable? = null
+
     @JvmField
     var lzwMinimumCodeSize = 0
+
     @JvmField
     var imageDataOffset = 0
+
     @Throws(IOException::class)
     override fun receive(reader: FilterReader) {
         frameX = reader.readUInt16()

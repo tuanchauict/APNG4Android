@@ -11,6 +11,7 @@ import java.io.IOException
  */
 class PlaintTextExtension : ExtensionBlock() {
     private val plainTextData: MutableList<DataSubBlock> = ArrayList()
+
     @Throws(IOException::class)
     override fun receive(reader: FilterReader) {
         val blockSize = reader.peek().toInt()

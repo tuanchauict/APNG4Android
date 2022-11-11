@@ -12,10 +12,13 @@ import java.io.IOException
 class GraphicControlExtension : ExtensionBlock() {
     private var blockSize = 0
     private var packedFields: Byte = 0
+
     @JvmField
     var delayTime = 0
+
     @JvmField
     var transparentColorIndex = 0
+
     @Throws(IOException::class)
     override fun receive(reader: FilterReader) {
         blockSize = reader.peek().toInt() and 0xff
