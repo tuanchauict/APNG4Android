@@ -2,17 +2,12 @@ package com.github.penfeizhou.animation.apng.io
 
 import android.text.TextUtils
 import com.github.penfeizhou.animation.io.FilterReader
-import com.github.penfeizhou.animation.io.Reader
 import java.io.IOException
 
-/**
- * @Description: APNGReader
- * @Author: pengfei.zhou
- * @CreateDate: 2019-05-13
- */
-class APNGReader(reader: Reader) : FilterReader(reader) {
+
+object APNGReader {
     @Throws(IOException::class)
-    fun readInt(): Int {
+    fun FilterReader.readInt(): Int {
         val buf = ensureBytes()
         read(buf, 0, 4)
         return buf[3].toInt() and 0xFF or (
@@ -22,7 +17,7 @@ class APNGReader(reader: Reader) : FilterReader(reader) {
     }
 
     @Throws(IOException::class)
-    fun readShort(): Short {
+    fun FilterReader.readShort(): Short {
         val buf = ensureBytes()
         read(buf, 0, 2)
         return (buf[1].toInt() and 0xFF or (
@@ -33,7 +28,7 @@ class APNGReader(reader: Reader) : FilterReader(reader) {
      * @return read FourCC and match chars
      */
     @Throws(IOException::class)
-    fun matchFourCC(chars: String): Boolean {
+    fun FilterReader.matchFourCC(chars: String): Boolean {
         if (TextUtils.isEmpty(chars) || chars.length != 4) {
             return false
         }
@@ -47,22 +42,20 @@ class APNGReader(reader: Reader) : FilterReader(reader) {
     }
 
     @Throws(IOException::class)
-    fun readFourCC(): Int {
+    fun FilterReader.readFourCC(): Int {
         val buf = ensureBytes()
         read(buf, 0, 4)
         return buf[0].toInt() and 0xff or (buf[1].toInt() and 0xff shl 8) or (buf[2].toInt() and 0xff shl 16) or (buf[3].toInt() and 0xff shl 24)
     }
 
-    companion object {
-        private val THREAD_LOCAL_BYTE_BUFFERS = ThreadLocal<ByteArray>()
+    private val THREAD_LOCAL_BYTE_BUFFERS = ThreadLocal<ByteArray>()
 
-        private fun ensureBytes(): ByteArray {
-            var bytes = THREAD_LOCAL_BYTE_BUFFERS.get()
-            if (bytes == null) {
-                bytes = ByteArray(4)
-                THREAD_LOCAL_BYTE_BUFFERS.set(bytes)
-            }
-            return bytes
+    private fun ensureBytes(): ByteArray {
+        var bytes = THREAD_LOCAL_BYTE_BUFFERS.get()
+        if (bytes == null) {
+            bytes = ByteArray(4)
+            THREAD_LOCAL_BYTE_BUFFERS.set(bytes)
         }
+        return bytes
     }
 }

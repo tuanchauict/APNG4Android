@@ -4,15 +4,15 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
-import com.github.penfeizhou.animation.apng.io.APNGReader
 import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
 import java.util.zip.CRC32
 import kotlin.concurrent.getOrSet
 
 class APNGFrame internal constructor(
-    private val reader: APNGReader,
+    private val reader: FilterReader,
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,
     private val prefixChunks: MutableList<Chunk>

@@ -1,6 +1,8 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import com.github.penfeizhou.animation.apng.io.APNGReader
+import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.apng.io.APNGReader.readShort
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -70,7 +72,7 @@ internal class FCTLChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, 
      */
     var blend_op: Byte = 0
     @Throws(IOException::class)
-    override fun innerParse(reader: APNGReader) {
+    override fun innerParse(reader: FilterReader) {
         sequence_number = reader.readInt()
         width = reader.readInt()
         height = reader.readInt()

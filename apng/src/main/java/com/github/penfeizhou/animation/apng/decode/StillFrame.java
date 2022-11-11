@@ -7,22 +7,17 @@ import android.graphics.Paint;
 
 import androidx.annotation.NonNull;
 
-import com.github.penfeizhou.animation.apng.io.APNGReader;
 import com.github.penfeizhou.animation.decode.Frame;
+import com.github.penfeizhou.animation.io.FilterReader;
 import com.github.penfeizhou.animation.io.Writer;
 
 import java.io.IOException;
 
-/**
- * @Description: APNG4Android
- * @Author: pengfei.zhou
- * @CreateDate: 2019-05-13
- */
 public class StillFrame extends Frame {
     @NonNull
-    private final APNGReader reader;
+    private final FilterReader reader;
 
-    public StillFrame(@NonNull APNGReader reader) {
+    public StillFrame(@NonNull FilterReader reader) {
         this.reader = reader;
     }
 

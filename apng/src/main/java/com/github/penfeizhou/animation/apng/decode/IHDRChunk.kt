@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import com.github.penfeizhou.animation.apng.io.APNGReader
+import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -30,7 +31,7 @@ internal class IHDRChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, 
     var height = 0
     var data = ByteArray(5)
     @Throws(IOException::class)
-    override fun innerParse(reader: APNGReader) {
+    override fun innerParse(reader: FilterReader) {
         width = reader.readInt()
         height = reader.readInt()
         reader.read(data, 0, data.size)

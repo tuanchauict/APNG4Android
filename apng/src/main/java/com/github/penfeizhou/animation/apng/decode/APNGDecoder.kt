@@ -8,6 +8,7 @@ import com.github.penfeizhou.animation.apng.io.APNGReader
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.io.ByteBufferWriter
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
@@ -25,7 +26,7 @@ import java.nio.ByteOrder
 class APNGDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<APNGReader>(loader, renderListener, ::APNGReader) {
+) : FrameSeqDecoder2<FilterReader>(loader, renderListener, ::FilterReader) {
     private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 
@@ -48,7 +49,7 @@ class APNGDecoder(
     }
 
     @Throws(IOException::class)
-    override fun read(reader: APNGReader): Rect {
+    override fun read(reader: FilterReader): Rect {
         val chunks = APNGParser.parse(reader)
         val otherChunks = mutableListOf<Chunk>()
         var isAnimated = false

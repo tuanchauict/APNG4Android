@@ -3,6 +3,7 @@ package com.github.penfeizhou.animation.apng.decode
 import kotlin.Throws
 import com.github.penfeizhou.animation.apng.io.APNGReader
 import android.text.TextUtils
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -18,7 +19,7 @@ internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
     var crc = 0
 
     @Throws(IOException::class)
-    fun parse(reader: APNGReader) {
+    fun parse(reader: FilterReader) {
         val available = reader.available()
         innerParse(reader)
         val offset = available - reader.available()
@@ -30,7 +31,7 @@ internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
     }
 
     @Throws(IOException::class)
-    open fun innerParse(reader: APNGReader) = Unit
+    open fun innerParse(reader: FilterReader) = Unit
 
     companion object {
         @JvmStatic

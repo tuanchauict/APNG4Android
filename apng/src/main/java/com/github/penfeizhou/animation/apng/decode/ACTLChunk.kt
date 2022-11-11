@@ -1,7 +1,7 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import kotlin.Throws
-import com.github.penfeizhou.animation.apng.io.APNGReader
+import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.io.FilterReader
 import java.io.IOException
 
 /**
@@ -14,7 +14,7 @@ internal class ACTLChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, 
     var num_plays = 0
 
     @Throws(IOException::class)
-    override fun innerParse(reader: APNGReader) {
+    override fun innerParse(reader: FilterReader) {
         num_frames = reader.readInt()
         num_plays = reader.readInt()
     }

@@ -1,7 +1,10 @@
 package com.github.penfeizhou.animation.apng.decode
 
 import android.content.Context
-import com.github.penfeizhou.animation.apng.io.APNGReader
+import com.github.penfeizhou.animation.apng.io.APNGReader.matchFourCC
+import com.github.penfeizhou.animation.apng.io.APNGReader.readFourCC
+import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.io.StreamReader
 import java.io.FileInputStream
@@ -73,7 +76,7 @@ object APNGParser {
 
     @JvmStatic
     fun isAPNG(reader: Reader): Boolean {
-        val apngReader = if (reader is APNGReader) reader else APNGReader(reader)
+        val apngReader = if (reader is FilterReader) reader else FilterReader(reader)
         try {
             if (!apngReader.isValid()) {
                 throw FormatException()
@@ -92,7 +95,7 @@ object APNGParser {
     }
 
     @Throws(IOException::class)
-    internal fun parse(reader: APNGReader): List<Chunk> {
+    internal fun parse(reader: FilterReader): List<Chunk> {
         if (!reader.isValid()) {
             throw FormatException()
         }
@@ -103,11 +106,11 @@ object APNGParser {
         }
     }
 
-    private fun APNGReader.isValid(): Boolean =
+    private fun FilterReader.isValid(): Boolean =
         matchFourCC("\u0089PNG") && matchFourCC("\r\n\u001a\n")
 
     @Throws(IOException::class)
-    private fun parseChunk(reader: APNGReader): Chunk {
+    private fun parseChunk(reader: FilterReader): Chunk {
         val offset = reader.position()
         val size = reader.readInt()
         val chunk = when (val fourCC = reader.readFourCC()) {
