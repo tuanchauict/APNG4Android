@@ -5,12 +5,14 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.Rect
 import com.github.penfeizhou.animation.apng.io.APNGReader
-import com.github.penfeizhou.animation.apng.io.APNGWriter
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
+import com.github.penfeizhou.animation.io.ByteBufferWriter
+import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * @param loader webp-like reader
@@ -23,7 +25,7 @@ import java.nio.ByteBuffer
 class APNGDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<APNGReader, APNGWriter>(loader, renderListener, ::APNGReader) {
+) : FrameSeqDecoder2<APNGReader, Writer>(loader, renderListener, ::APNGReader) {
     private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 
@@ -35,7 +37,7 @@ class APNGDecoder(
 
     private val snapShot = SnapShot()
 
-    private val apngWriter: APNGWriter by lazy { APNGWriter() }
+    private val apngWriter: Writer by lazy { ByteBufferWriter(ByteOrder.BIG_ENDIAN) }
 
     override fun getLoopCount(): Int {
         return mLoopCount
@@ -95,7 +97,7 @@ class APNGDecoder(
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame<APNGWriter>) {
+    override fun renderFrame(frame: Frame<Writer>) {
         val fullRect = fullRect ?: return
         try {
             val bitmap =

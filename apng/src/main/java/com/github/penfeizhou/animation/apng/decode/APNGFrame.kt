@@ -5,8 +5,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import com.github.penfeizhou.animation.apng.io.APNGReader
-import com.github.penfeizhou.animation.apng.io.APNGWriter
 import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
 import java.util.zip.CRC32
 import kotlin.concurrent.getOrSet
@@ -16,7 +16,7 @@ class APNGFrame internal constructor(
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,
     private val prefixChunks: MutableList<Chunk>
-) : Frame<APNGWriter>() {
+) : Frame<Writer>() {
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
 
@@ -44,7 +44,7 @@ class APNGFrame internal constructor(
         paint: Paint,
         sampleSize: Int,
         reusedBitmap: Bitmap,
-        writer: APNGWriter
+        writer: Writer
     ): Bitmap? {
         try {
             val length = encode(writer)
@@ -82,7 +82,7 @@ class APNGFrame internal constructor(
     }
 
     @Throws(IOException::class)
-    private fun encode(apngWriter: APNGWriter): Int {
+    private fun encode(writer: Writer): Int {
         var fileSize = 8 + 13 + 12
 
         //prefixChunks
@@ -100,20 +100,20 @@ class APNGFrame internal constructor(
 
         fileSize += PNG_END_CHUNK.size
 
-        apngWriter.reset(fileSize)
-        apngWriter.putBytes(PNG_SIGNATURES)
+        writer.reset(fileSize)
+        writer.putBytes(PNG_SIGNATURES)
 
         //IHDR Chunk
-        apngWriter.writeInt(13)
-        var start = apngWriter.position()
-        apngWriter.writeFourCC(IHDRChunk.ID)
-        apngWriter.writeInt(frameWidth)
-        apngWriter.writeInt(frameHeight)
-        apngWriter.putBytes(ihdrData)
+        writer.writeInt(13)
+        var start = writer.position()
+        writer.writeFourCC(IHDRChunk.ID)
+        writer.writeInt(frameWidth)
+        writer.writeInt(frameHeight)
+        writer.putBytes(ihdrData)
         val crc32 = CRC32_THREAD_LOCAL.getOrSet { CRC32() }
         crc32.reset()
-        crc32.update(apngWriter.toByteArray(), start, 17)
-        apngWriter.writeInt(crc32.value.toInt())
+        crc32.update(writer.toByteArray(), start, 17)
+        writer.writeInt(crc32.value.toInt())
 
         //prefixChunks
         for (chunk in prefixChunks) {
@@ -122,8 +122,8 @@ class APNGFrame internal constructor(
             }
             reader.reset()
             reader.skip(chunk.offset.toLong())
-            reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length + 12)
-            apngWriter.skip(chunk.length + 12)
+            reader.read(writer.toByteArray(), writer.position(), chunk.length + 12)
+            writer.skip(chunk.length + 12)
         }
         //imageChunks
         for (chunk in imageChunks) {
@@ -131,27 +131,41 @@ class APNGFrame internal constructor(
                 is IDATChunk -> {
                     reader.reset()
                     reader.skip(chunk.offset.toLong())
-                    reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length + 12)
-                    apngWriter.skip(chunk.length + 12)
+                    reader.read(writer.toByteArray(), writer.position(), chunk.length + 12)
+                    writer.skip(chunk.length + 12)
                 }
                 is FDATChunk -> {
-                    apngWriter.writeInt(chunk.length - 4)
-                    start = apngWriter.position()
-                    apngWriter.writeFourCC(IDATChunk.ID)
+                    writer.writeInt(chunk.length - 4)
+                    start = writer.position()
+                    writer.writeFourCC(IDATChunk.ID)
                     reader.reset()
                     // skip to fdat data position
                     reader.skip((chunk.offset + 4 + 4 + 4).toLong())
-                    reader.read(apngWriter.toByteArray(), apngWriter.position(), chunk.length - 4)
-                    apngWriter.skip(chunk.length - 4)
+                    reader.read(writer.toByteArray(), writer.position(), chunk.length - 4)
+                    writer.skip(chunk.length - 4)
                     crc32.reset()
-                    crc32.update(apngWriter.toByteArray(), start, chunk.length)
-                    apngWriter.writeInt(crc32.value.toInt())
+                    crc32.update(writer.toByteArray(), start, chunk.length)
+                    writer.writeInt(crc32.value.toInt())
                 }
             }
         }
         //endChunk
-        apngWriter.putBytes(PNG_END_CHUNK)
+        writer.putBytes(PNG_END_CHUNK)
         return fileSize
+    }
+
+    private fun Writer.writeFourCC(value: Int) {
+        putByte((value and 0xff).toByte())
+        putByte((value shr 8 and 0xff).toByte())
+        putByte((value shr 16 and 0xff).toByte())
+        putByte((value shr 24 and 0xff).toByte())
+    }
+
+    private fun Writer.writeInt(value: Int) {
+        putByte((value shr 24 and 0xff).toByte())
+        putByte((value shr 16 and 0xff).toByte())
+        putByte((value shr 8 and 0xff).toByte())
+        putByte((value and 0xff).toByte())
     }
 
     companion object {

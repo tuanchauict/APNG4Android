@@ -11,8 +11,14 @@ import java.nio.ByteOrder;
 public class ByteBufferWriter implements Writer {
 
     protected ByteBuffer byteBuffer;
+    private final ByteOrder byteOrder;
 
     public ByteBufferWriter() {
+        this(ByteOrder.LITTLE_ENDIAN);
+    }
+
+    public ByteBufferWriter(ByteOrder byteOrder) {
+        this.byteOrder = byteOrder;
         reset(10 * 1024);
     }
 
@@ -49,7 +55,7 @@ public class ByteBufferWriter implements Writer {
     public void reset(int size) {
         if (byteBuffer == null || size > byteBuffer.capacity()) {
             byteBuffer = ByteBuffer.allocate(size);
-            this.byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+            this.byteBuffer.order(byteOrder);
         }
         byteBuffer.clear();
     }

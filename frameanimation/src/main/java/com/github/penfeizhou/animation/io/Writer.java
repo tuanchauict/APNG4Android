@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.io;
 
 import java.io.IOException;
+import java.nio.IntBuffer;
 
 /**
  * @Description: APNG4Android
@@ -21,4 +22,12 @@ public interface Writer {
     byte[] toByteArray();
 
     void close() throws IOException;
+
+    default int[] asIntArray() {
+        throw new UnsupportedOperationException();
+    }
+
+    default IntBuffer asIntBuffer() {
+        throw new UnsupportedOperationException();
+    }
 }

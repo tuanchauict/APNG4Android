@@ -79,7 +79,7 @@ public class GifFrame extends Frame<GifWriter> {
             writer.reset(frameWidth * frameHeight / (sampleSize * sampleSize));
             int[] pixels = writer.asIntArray();
             encode(pixels, sampleSize);
-            reusedBitmap.copyPixelsFromBuffer(writer.asBuffer().rewind());
+            reusedBitmap.copyPixelsFromBuffer(writer.asIntBuffer().rewind());
             srcRect.left = 0;
             srcRect.top = 0;
             srcRect.right = reusedBitmap.getWidth();

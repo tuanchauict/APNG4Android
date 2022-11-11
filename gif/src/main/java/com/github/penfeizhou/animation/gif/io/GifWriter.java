@@ -54,11 +54,13 @@ public class GifWriter implements Writer {
         intBuffer.position(0);
     }
 
+    @Override
     public int[] asIntArray() {
         return intBuffer.array();
     }
 
-    public IntBuffer asBuffer() {
+    @Override
+    public IntBuffer asIntBuffer() {
         return intBuffer;
     }
 }

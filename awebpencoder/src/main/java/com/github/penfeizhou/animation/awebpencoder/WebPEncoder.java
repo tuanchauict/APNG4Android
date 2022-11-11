@@ -121,7 +121,7 @@ public class WebPEncoder {
                 int[] pixels = writer.asIntArray();
                 frame.encode(pixels, 1);
                 Bitmap bitmap = Bitmap.createBitmap(frame.frameWidth, frame.frameHeight, Bitmap.Config.ARGB_8888);
-                bitmap.copyPixelsFromBuffer(writer.asBuffer().rewind());
+                bitmap.copyPixelsFromBuffer(writer.asIntBuffer().rewind());
                 FrameBuilder frameBuilder = new FrameBuilder();
                 boolean disposal = false, blending = false;
                 switch (frame.disposalMethod) {
