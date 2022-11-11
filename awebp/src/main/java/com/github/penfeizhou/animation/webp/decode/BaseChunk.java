@@ -2,7 +2,7 @@ package com.github.penfeizhou.animation.webp.decode;
 
 import android.text.TextUtils;
 
-import com.github.penfeizhou.animation.webp.io.WebPReader;
+import com.github.penfeizhou.animation.io.FilterReader;
 
 import java.io.IOException;
 
@@ -28,7 +28,7 @@ public class BaseChunk {
                 ;
     }
 
-    final void parse(WebPReader reader) throws IOException {
+    final void parse(FilterReader reader) throws IOException {
         int available = reader.available();
         innerParse(reader);
         int offset = available - reader.available();
@@ -49,6 +49,6 @@ public class BaseChunk {
      *
      * @param reader current reader
      */
-    void innerParse(WebPReader reader) throws IOException {
+    void innerParse(FilterReader reader) throws IOException {
     }
 }

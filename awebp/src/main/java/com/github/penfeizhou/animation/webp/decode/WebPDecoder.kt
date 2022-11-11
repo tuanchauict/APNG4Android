@@ -10,9 +10,9 @@ import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.io.ByteBufferWriter
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
-import com.github.penfeizhou.animation.webp.io.WebPReader
 import java.io.IOException
 
 /**
@@ -22,7 +22,7 @@ import java.io.IOException
 class WebPDecoder(
     loader: Loader,
     renderListener: RenderListener?
-) : FrameSeqDecoder2<WebPReader>(loader, renderListener, ::WebPReader) {
+) : FrameSeqDecoder2<FilterReader>(loader, renderListener, ::FilterReader) {
     private val mTransparentFillPaint: Paint = Paint().apply {
         color = Color.TRANSPARENT
         style = Paint.Style.FILL
@@ -47,7 +47,7 @@ class WebPDecoder(
     override fun release() {}
 
     @Throws(IOException::class)
-    override fun read(reader: WebPReader): Rect {
+    override fun read(reader: FilterReader): Rect {
         val chunks = WebPParser.parse(reader)
         var anim = false
         var vp8x = false
@@ -68,7 +68,7 @@ class WebPDecoder(
             }
         }
         if (!anim) {
-            //静态图
+            // 静态图
             if (!vp8x) {
                 val options = BitmapFactory.Options()
                 options.inJustDecodeBounds = true
@@ -106,9 +106,9 @@ class WebPDecoder(
             }
         } else {
             val preFrame = frames[frameIndex - 1]
-            //Dispose to background color. Fill the rectangle on the canvas covered by the current frame with background color specified in the ANIM chunk.
-            if (preFrame is AnimationFrame
-                && preFrame.disposalMethod
+            // Dispose to background color. Fill the rectangle on the canvas covered by the current frame with background color specified in the ANIM chunk.
+            if (preFrame is AnimationFrame &&
+                preFrame.disposalMethod
             ) {
                 val left = preFrame.frameX.toFloat() * 2 / sampleSize.toFloat()
                 val top = preFrame.frameY.toFloat() * 2 / sampleSize.toFloat()

@@ -7,15 +7,15 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
-import com.github.penfeizhou.animation.webp.io.WebPReader
 import com.github.penfeizhou.animation.webp.io.WebPWriter.put1Based
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putFourCC
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt24
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt32
 import java.io.IOException
 
-class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Frame() {
+class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : Frame() {
     val imagePayloadOffset: Int
     val imagePayloadSize: Int
     val blendingMethod: Boolean
@@ -47,7 +47,7 @@ class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Fra
         writer.putUInt32(size)
         writer.putFourCC("WEBP")
 
-        //VP8X
+        // VP8X
         writer.putUInt32(VP8XChunk.ID)
         writer.putUInt32(vp8xPayloadSize)
         writer.putByte((if (useAlpha) 0x10 else 0).toByte())
@@ -55,7 +55,7 @@ class AnimationFrame(private val reader: WebPReader, anmfChunk: ANMFChunk) : Fra
         writer.put1Based(frameWidth)
         writer.put1Based(frameHeight)
 
-        //ImageData
+        // ImageData
         try {
             reader.reset()
             reader.skip(imagePayloadOffset.toLong())

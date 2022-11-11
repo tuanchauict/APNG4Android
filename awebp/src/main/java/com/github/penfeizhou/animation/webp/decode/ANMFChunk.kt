@@ -1,6 +1,8 @@
 package com.github.penfeizhou.animation.webp.decode
 
-import com.github.penfeizhou.animation.webp.io.WebPReader
+import com.github.penfeizhou.animation.io.FilterReader
+import com.github.penfeizhou.animation.webp.io.WebPReader.read1Based
+import com.github.penfeizhou.animation.webp.io.WebPReader.readUInt24
 import java.io.IOException
 
 /**
@@ -62,8 +64,9 @@ class ANMFChunk : BaseChunk() {
     var alphChunk: ALPHChunk? = null
     var vp8Chunk: VP8Chunk? = null
     var vp8LChunk: VP8LChunk? = null
+
     @Throws(IOException::class)
-    public override fun innerParse(reader: WebPReader) {
+    public override fun innerParse(reader: FilterReader) {
         val available = reader.available()
         frameX = reader.readUInt24()
         frameY = reader.readUInt24()

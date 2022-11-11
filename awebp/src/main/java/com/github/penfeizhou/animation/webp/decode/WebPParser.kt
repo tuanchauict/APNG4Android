@@ -1,9 +1,12 @@
 package com.github.penfeizhou.animation.webp.decode
 
 import android.content.Context
+import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.io.StreamReader
-import com.github.penfeizhou.animation.webp.io.WebPReader
+import com.github.penfeizhou.animation.webp.io.WebPReader.matchFourCC
+import com.github.penfeizhou.animation.webp.io.WebPReader.readFourCC
+import com.github.penfeizhou.animation.webp.io.WebPReader.readUInt32
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -69,8 +72,8 @@ object WebPParser {
     }
 
     @JvmStatic
-    fun isAWebP(`in`: Reader?): Boolean {
-        val reader = if (`in` is WebPReader) `in` else WebPReader(`in`!!)
+    fun isAWebP(reader: Reader): Boolean {
+        val reader = if (reader is FilterReader) reader else FilterReader(reader)
         try {
             if (!reader.matchFourCC("RIFF")) {
                 return false
@@ -94,8 +97,8 @@ object WebPParser {
     }
 
     @Throws(IOException::class)
-    fun parse(reader: WebPReader): List<BaseChunk> {
-        //@link {https://developers.google.com/speed/webp/docs/riff_container#webp_file_header}
+    fun parse(reader: FilterReader): List<BaseChunk> {
+        // @link {https://developers.google.com/speed/webp/docs/riff_container#webp_file_header}
         if (!reader.matchFourCC("RIFF")) {
             throw FormatException()
         }
@@ -111,8 +114,8 @@ object WebPParser {
     }
 
     @Throws(IOException::class)
-    fun parseChunk(reader: WebPReader): BaseChunk {
-        //@link {https://developers.google.com/speed/webp/docs/riff_container#riff_file_format}
+    fun parseChunk(reader: FilterReader): BaseChunk {
+        // @link {https://developers.google.com/speed/webp/docs/riff_container#riff_file_format}
         val offset = reader.position()
         val chunkFourCC = reader.readFourCC()
         val chunkSize = reader.readUInt32()

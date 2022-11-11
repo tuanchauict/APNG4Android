@@ -8,10 +8,8 @@ import android.graphics.Paint;
 import androidx.annotation.NonNull;
 
 import com.github.penfeizhou.animation.decode.Frame;
-import com.github.penfeizhou.animation.io.Reader;
+import com.github.penfeizhou.animation.io.FilterReader;
 import com.github.penfeizhou.animation.io.Writer;
-import com.github.penfeizhou.animation.webp.io.WebPReader;
-import com.github.penfeizhou.animation.webp.io.WebPWriter;
 
 import java.io.IOException;
 
@@ -22,9 +20,9 @@ import java.io.IOException;
  */
 public class StillFrame extends Frame {
     @NonNull
-    private final WebPReader reader;
+    private final FilterReader reader;
 
-    public StillFrame(@NonNull WebPReader reader, int width, int height) {
+    public StillFrame(@NonNull FilterReader reader, int width, int height) {
         this.reader = reader;
         this.frameWidth = width;
         this.frameHeight = height;

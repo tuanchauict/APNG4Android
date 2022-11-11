@@ -1,6 +1,7 @@
 package com.github.penfeizhou.animation.webp.decode
 
-import com.github.penfeizhou.animation.webp.io.WebPReader
+import com.github.penfeizhou.animation.io.FilterReader
+import com.github.penfeizhou.animation.webp.io.WebPReader.read1Based
 import java.io.IOException
 
 /**
@@ -38,8 +39,9 @@ class VP8XChunk : BaseChunk() {
      * 1-based height of the canvas in pixels. The actual canvas height is '1 + Canvas Height Minus One'
      */
     var canvasHeight = 0
+
     @Throws(IOException::class)
-    public override fun innerParse(reader: WebPReader) {
+    public override fun innerParse(reader: FilterReader) {
         flags = reader.peek()
         reader.skip(3)
         canvasWidth = reader.read1Based()

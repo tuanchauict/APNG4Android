@@ -1,6 +1,8 @@
 package com.github.penfeizhou.animation.webp.decode
 
-import com.github.penfeizhou.animation.webp.io.WebPReader
+import com.github.penfeizhou.animation.io.FilterReader
+import com.github.penfeizhou.animation.webp.io.WebPReader.readUInt16
+import com.github.penfeizhou.animation.webp.io.WebPReader.readUInt32
 import java.io.IOException
 
 /**
@@ -30,8 +32,9 @@ class ANIMChunk : BaseChunk() {
      * The number of times to loop the animation. 0 means infinitely.
      */
     var loopCount = 0
+
     @Throws(IOException::class)
-    public override fun innerParse(reader: WebPReader) {
+    public override fun innerParse(reader: FilterReader) {
         backgroundColor = reader.readUInt32()
         loopCount = reader.readUInt16()
     }
