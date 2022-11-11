@@ -128,15 +128,15 @@ class APNGDecoder(
                 }
 
                 // Then pass it to the snapshot information according to the dispose setting
-                if (frame.dispose_op == FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
+                if (frame.disposeOp == FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
                     if (snapShot.disposeOp != FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
                         snapShot.byteBuffer?.rewind()
                         bitmap.copyPixelsToBuffer(snapShot.byteBuffer)
                     }
                 }
-                snapShot.disposeOp = frame.dispose_op
+                snapShot.disposeOp = frame.disposeOp
                 canvas.save()
-                if (frame.blend_op == FCTLChunk.APNG_BLEND_OP_SOURCE) {
+                if (frame.blendOp == FCTLChunk.APNG_BLEND_OP_SOURCE) {
                     canvas.clipRect(
                         frame.frameX / sampleSize,
                         frame.frameY / sampleSize,

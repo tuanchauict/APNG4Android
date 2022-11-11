@@ -17,14 +17,12 @@ class APNGFrame internal constructor(
     private val ihdrData: ByteArray,
     private val prefixChunks: MutableList<Chunk>
 ) : Frame<APNGReader, APNGWriter>(reader) {
-    val blend_op: Byte
-    val dispose_op: Byte
+    val blendOp: Byte = fctlChunk.blend_op
+    val disposeOp: Byte = fctlChunk.dispose_op
 
     internal val imageChunks: MutableList<DATChunk> = mutableListOf()
 
     init {
-        blend_op = fctlChunk.blend_op
-        dispose_op = fctlChunk.dispose_op
         frameDuration =
             fctlChunk.delay_num * 1000 / if (fctlChunk.delay_den.toInt() == 0) 100 else fctlChunk.delay_den
         if (frameDuration < 10) {
@@ -50,38 +48,37 @@ class APNGFrame internal constructor(
     ): Bitmap? {
         try {
             val length = encode(writer)
-            val options = BitmapFactory.Options().apply {
-                inJustDecodeBounds = false
-                inSampleSize = sampleSize
-                inMutable = true
-                inBitmap = reusedBitmap
-            }
             val bytes = writer.toByteArray()
+            val options = createBitmapFactoryOptions(sampleSize, reusedBitmap)
             val bitmap: Bitmap = try {
                 BitmapFactory.decodeByteArray(bytes, 0, length, options)
             } catch (e: IllegalArgumentException) {
                 // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
-                val optionsFixed = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = false
-                    inSampleSize = sampleSize
-                    inMutable = true
-                }
+                val optionsFixed = createBitmapFactoryOptions(sampleSize, null)
                 BitmapFactory.decodeByteArray(bytes, 0, length, optionsFixed)
             }
-            srcRect.left = 0
-            srcRect.top = 0
-            srcRect.right = bitmap.width
-            srcRect.bottom = bitmap.height
-            dstRect.left = (frameX.toFloat() / sampleSize).toInt()
-            dstRect.top = (frameY.toFloat() / sampleSize).toInt()
-            dstRect.right = (frameX.toFloat() / sampleSize + bitmap.width).toInt()
-            dstRect.bottom = (frameY.toFloat() / sampleSize + bitmap.height).toInt()
+
+            srcRect.set(0, 0, bitmap.width, bitmap.height)
+
+            val destLeft = frameX / sampleSize
+            val destTop = frameY / sampleSize
+            dstRect.set(destLeft, destTop, destLeft + bitmap.width, destTop + bitmap.height)
             canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
             return bitmap
         } catch (e: IOException) {
             e.printStackTrace()
         }
         return null
+    }
+
+    private fun createBitmapFactoryOptions(
+        sampleSize: Int,
+        reusedBitmap: Bitmap?
+    ): BitmapFactory.Options = BitmapFactory.Options().apply {
+        inJustDecodeBounds = false
+        inSampleSize = sampleSize
+        inMutable = true
+        inBitmap = reusedBitmap
     }
 
     @Throws(IOException::class)
