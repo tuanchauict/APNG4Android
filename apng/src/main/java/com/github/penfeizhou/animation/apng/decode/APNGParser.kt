@@ -72,7 +72,7 @@ object APNGParser {
     }
 
     @JvmStatic
-    fun isAPNG(reader: Reader?): Boolean {
+    fun isAPNG(reader: Reader): Boolean {
         val apngReader = if (reader is APNGReader) reader else APNGReader(reader)
         try {
             if (!apngReader.isValid()) {

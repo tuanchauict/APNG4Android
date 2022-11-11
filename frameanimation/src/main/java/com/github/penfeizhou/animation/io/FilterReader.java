@@ -1,5 +1,7 @@
 package com.github.penfeizhou.animation.io;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -9,9 +11,10 @@ import java.io.InputStream;
  * @CreateDate: 2019-05-23
  */
 public class FilterReader implements Reader {
+    @NonNull
     protected Reader reader;
 
-    public FilterReader(Reader in) {
+    public FilterReader(@NonNull Reader in) {
         this.reader = in;
     }
 
