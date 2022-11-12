@@ -50,7 +50,9 @@ class APNGDecoder(
     @Throws(IOException::class)
     override fun read(reader: FilterReader): Rect {
         val chunks = APNGParser.parse(reader)
-        val otherChunks = mutableListOf<Chunk>()
+
+        val framePrefixChunks = mutableListOf<GeneralChunk>()
+
         var isAnimated = false
         var lastFrame: APNGFrame? = null
         var ihdrData = ByteArray(0)
@@ -64,7 +66,7 @@ class APNGDecoder(
                     isAnimated = true
                 }
                 is FCTLChunk -> {
-                    val frame = APNGFrame(reader, chunk, ihdrData, otherChunks)
+                    val frame = APNGFrame(reader, chunk, ihdrData, framePrefixChunks)
                     frames.add(frame)
                     lastFrame = frame
                 }
@@ -88,7 +90,7 @@ class APNGDecoder(
                     canvasHeight = chunk.height
                     ihdrData = chunk.data
                 }
-                is GeneralChunk -> otherChunks.add(chunk)
+                is GeneralChunk -> framePrefixChunks.add(chunk)
                 is IENDChunk -> Unit
             }
         }

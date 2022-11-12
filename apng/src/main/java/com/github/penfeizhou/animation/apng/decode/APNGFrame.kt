@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
+import com.github.penfeizhou.animation.apng.io.APNGWriter.writeFourCC
+import com.github.penfeizhou.animation.apng.io.APNGWriter.writeInt
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -15,12 +17,16 @@ class APNGFrame internal constructor(
     private val reader: FilterReader,
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,
-    private val prefixChunks: MutableList<Chunk>
+    private val prefixChunks: MutableList<GeneralChunk>
 ) : Frame() {
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
 
     internal val imageChunks: MutableList<DATChunk> = mutableListOf()
+
+    private val frameSizeInBytes: Int by lazy {
+        calculateFrameSizeInBytes()
+    }
 
     init {
         frameDuration =
@@ -47,28 +53,28 @@ class APNGFrame internal constructor(
         writer: Writer
     ): Bitmap? {
         try {
-            val length = encode(writer)
-            val bytes = writer.toByteArray()
-            val options = createBitmapFactoryOptions(sampleSize, reusedBitmap)
-            val bitmap: Bitmap = try {
-                BitmapFactory.decodeByteArray(bytes, 0, length, options)
-            } catch (e: IllegalArgumentException) {
-                // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
-                val optionsFixed = createBitmapFactoryOptions(sampleSize, null)
-                BitmapFactory.decodeByteArray(bytes, 0, length, optionsFixed)
-            }
-
-            srcRect.set(0, 0, bitmap.width, bitmap.height)
-
-            val destLeft = frameX / sampleSize
-            val destTop = frameY / sampleSize
-            dstRect.set(destLeft, destTop, destLeft + bitmap.width, destTop + bitmap.height)
-            canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
-            return bitmap
+            encode(writer)
         } catch (e: IOException) {
             e.printStackTrace()
+            return null
         }
-        return null
+        val bytes = writer.toByteArray()
+        val options = createBitmapFactoryOptions(sampleSize, reusedBitmap)
+        val bitmap: Bitmap = try {
+            BitmapFactory.decodeByteArray(bytes, 0, frameSizeInBytes, options)
+        } catch (e: IllegalArgumentException) {
+            // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
+            val optionsFixed = createBitmapFactoryOptions(sampleSize, null)
+            BitmapFactory.decodeByteArray(bytes, 0, frameSizeInBytes, optionsFixed)
+        }
+
+        srcRect.set(0, 0, bitmap.width, bitmap.height)
+
+        val destLeft = frameX / sampleSize
+        val destTop = frameY / sampleSize
+        dstRect.set(destLeft, destTop, destLeft + bitmap.width, destTop + bitmap.height)
+        canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
+        return bitmap
     }
 
     private fun createBitmapFactoryOptions(
@@ -82,25 +88,8 @@ class APNGFrame internal constructor(
     }
 
     @Throws(IOException::class)
-    private fun encode(writer: Writer): Int {
-        var fileSize = 8 + 13 + 12
-
-        // prefixChunks
-        for (chunk in prefixChunks) {
-            fileSize += chunk.length + 12
-        }
-
-        // imageChunks
-        for (chunk in imageChunks) {
-            fileSize += when (chunk) {
-                is IDATChunk -> chunk.length + 12
-                is FDATChunk -> chunk.length + 8
-            }
-        }
-
-        fileSize += PNG_END_CHUNK.size
-
-        writer.reset(fileSize)
+    private fun encode(writer: Writer) {
+        writer.reset(frameSizeInBytes)
         writer.putBytes(PNG_SIGNATURES)
 
         // IHDR Chunk
@@ -117,9 +106,6 @@ class APNGFrame internal constructor(
 
         // prefixChunks
         for (chunk in prefixChunks) {
-            if (chunk is IENDChunk) {
-                continue
-            }
             reader.reset()
             reader.skip(chunk.offset)
             reader.read(writer.toByteArray(), writer.position(), chunk.length + 12)
@@ -151,21 +137,24 @@ class APNGFrame internal constructor(
         }
         // endChunk
         writer.putBytes(PNG_END_CHUNK)
+    }
+
+    private fun calculateFrameSizeInBytes(): Int {
+        var fileSize = 8 + 13 + 12
+
+        // prefixChunks
+        fileSize += prefixChunks.sumOf { it.length + 12 }
+
+        // imageChunks
+        fileSize += imageChunks.sumOf {
+            when (it) {
+                is FDATChunk -> it.length + 8
+                is IDATChunk -> it.length + 12
+            }
+        }
+
+        fileSize += PNG_END_CHUNK.size
         return fileSize
-    }
-
-    private fun Writer.writeFourCC(value: Int) {
-        putByte((value and 0xff).toByte())
-        putByte((value shr 8 and 0xff).toByte())
-        putByte((value shr 16 and 0xff).toByte())
-        putByte((value shr 24 and 0xff).toByte())
-    }
-
-    private fun Writer.writeInt(value: Int) {
-        putByte((value shr 24 and 0xff).toByte())
-        putByte((value shr 16 and 0xff).toByte())
-        putByte((value shr 8 and 0xff).toByte())
-        putByte((value and 0xff).toByte())
     }
 
     companion object {
