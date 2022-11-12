@@ -9,7 +9,11 @@ import java.io.IOException
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal class FDATChunk(offset: Long, length: Int, fourCC: Int) : DATChunk(offset, length, fourCC) {
+internal class FDATChunk(
+    offset: Long,
+    length: Int,
+    fourCC: Int
+) : Chunk(offset, length, fourCC), FrameChunk, DATChunk {
     var sequence_number = 0
 
     @Throws(IOException::class)

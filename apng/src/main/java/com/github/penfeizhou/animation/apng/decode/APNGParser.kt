@@ -95,15 +95,19 @@ object APNGParser {
     }
 
     @Throws(IOException::class)
-    internal fun parse(reader: FilterReader): List<Chunk> {
+    internal fun parse(reader: FilterReader): ParseChunkResult {
         if (!reader.isValid()) {
             throw FormatException()
         }
-        return buildList {
-            while (reader.available() > 0) {
-                add(parseChunk(reader))
+        val frameChunks = mutableListOf<FrameChunk>()
+        val prefixChunks = mutableListOf<GeneralChunk>()
+        while (reader.available() > 0) {
+            when (val chunk = parseChunk(reader)) {
+                is FrameChunk -> frameChunks.add(chunk)
+                is GeneralChunk -> prefixChunks.add(chunk)
             }
         }
+        return ParseChunkResult(frameChunks, prefixChunks)
     }
 
     private fun FilterReader.isValid(): Boolean =
@@ -128,4 +132,9 @@ object APNGParser {
     }
 
     internal class FormatException : IOException("APNG Format error")
+
+    internal class ParseChunkResult(
+        val frameChunks: List<FrameChunk>,
+        val prefixChunks: List<GeneralChunk>
+    )
 }
