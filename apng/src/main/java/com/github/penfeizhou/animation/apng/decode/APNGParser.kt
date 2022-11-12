@@ -111,7 +111,7 @@ object APNGParser {
 
     @Throws(IOException::class)
     private fun parseChunk(reader: FilterReader): Chunk {
-        val offset = reader.position()
+        val offset = reader.position().toLong()
         val size = reader.readInt()
         val chunk = when (val fourCC = reader.readFourCC()) {
             ACTLChunk.ID -> ACTLChunk(offset, size, fourCC)

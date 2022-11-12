@@ -9,7 +9,7 @@ import java.io.IOException
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal class ACTLChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC) {
+internal class ACTLChunk(offset: Long, length: Int, fourCC: Int) : Chunk(offset, length, fourCC) {
     var num_frames = 0
     var num_plays = 0
 

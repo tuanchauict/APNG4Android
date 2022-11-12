@@ -121,7 +121,7 @@ class APNGFrame internal constructor(
                 continue
             }
             reader.reset()
-            reader.skip(chunk.offset.toLong())
+            reader.skip(chunk.offset)
             reader.read(writer.toByteArray(), writer.position(), chunk.length + 12)
             writer.skip(chunk.length + 12)
         }
@@ -130,7 +130,7 @@ class APNGFrame internal constructor(
             when (chunk) {
                 is IDATChunk -> {
                     reader.reset()
-                    reader.skip(chunk.offset.toLong())
+                    reader.skip(chunk.offset)
                     reader.read(writer.toByteArray(), writer.position(), chunk.length + 12)
                     writer.skip(chunk.length + 12)
                 }
@@ -140,7 +140,7 @@ class APNGFrame internal constructor(
                     writer.writeFourCC(IDATChunk.ID)
                     reader.reset()
                     // skip to fdat data position
-                    reader.skip((chunk.offset + 4 + 4 + 4).toLong())
+                    reader.skip(chunk.offset + 4L + 4L + 4L)
                     reader.read(writer.toByteArray(), writer.position(), chunk.length - 4)
                     writer.skip(chunk.length - 4)
                     crc32.reset()

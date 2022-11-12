@@ -14,7 +14,7 @@ import kotlin.Throws
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
+internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int) {
     var crc = 0
 
     @Throws(IOException::class)
@@ -48,10 +48,10 @@ internal sealed class Chunk(val offset: Int, val length: Int, val fourCC: Int) {
     }
 }
 
-internal class GeneralChunk(offset: Int, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)
+internal class GeneralChunk(offset: Long, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)
 
 internal sealed class DATChunk(
-    offset: Int,
+    offset: Long,
     length: Int,
     fourCC: Int
 ) : Chunk(offset, length, fourCC)
