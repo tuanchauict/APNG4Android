@@ -99,20 +99,26 @@ object APNGParser {
         if (!reader.isValid()) {
             throw FormatException()
         }
-        val frameChunks = mutableListOf<FrameChunk>()
+        val frameDatas = mutableListOf<FrameData>()
         val prefixChunks = mutableListOf<FramePrefixChunk>()
         var ihdrChunk = IHDRChunk(0, 0, IHDRChunk.ID)
         var actlChunk: ACTLChunk? = null
+        var hasIDATChunk = false
         while (reader.available() > 0) {
             when (val chunk = parseChunk(reader)) {
-                is FrameChunk -> frameChunks.add(chunk)
+                is FCTLChunk -> frameDatas.add(FrameData(chunk))
+                is FDATChunk -> frameDatas.lastOrNull()?.imageChunks?.add(chunk)
+                is IDATChunk -> {
+                    hasIDATChunk = true
+                    frameDatas.lastOrNull()?.imageChunks?.add(chunk)
+                }
                 is FramePrefixChunk -> prefixChunks.add(chunk)
                 is IHDRChunk -> ihdrChunk = chunk
                 is ACTLChunk -> actlChunk = chunk
                 is IENDChunk -> Unit
             }
         }
-        return ParseChunkResult(frameChunks, prefixChunks, ihdrChunk, actlChunk)
+        return ParseChunkResult(frameDatas, prefixChunks, ihdrChunk, actlChunk, hasIDATChunk)
     }
 
     private fun FilterReader.isValid(): Boolean =
@@ -139,9 +145,14 @@ object APNGParser {
     internal class FormatException : IOException("APNG Format error")
 
     internal class ParseChunkResult(
-        val frameChunks: List<FrameChunk>,
+        val frameDatas: List<FrameData>,
         val prefixChunks: List<FramePrefixChunk>,
         val ihdrChunk: IHDRChunk,
-        val actlChunk: ACTLChunk?
+        val actlChunk: ACTLChunk?,
+        val hasIDATChunk: Boolean
     )
+
+    internal class FrameData(val fctlChunk: FCTLChunk) {
+        val imageChunks: MutableList<DATChunk> = mutableListOf()
+    }
 }

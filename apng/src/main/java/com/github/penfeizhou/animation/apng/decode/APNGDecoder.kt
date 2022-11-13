@@ -52,51 +52,33 @@ class APNGDecoder(
         val result = APNGParser.parse(reader)
 
         val isAnimated = result.actlChunk != null
-        mLoopCount = result.actlChunk?.num_plays ?: 0
-
-        if (!isAnimated) {
-            if (result.frameChunks.any { it is IDATChunk }) {
-                createStillFrame(reader, result.ihdrChunk.width, result.ihdrChunk.height)
-            }
-        } else {
-            val frameDatas = result.frameChunks.fold(mutableListOf<FrameData>()) { list, chunk ->
-                when (chunk) {
-                    is FCTLChunk -> list.add(FrameData(chunk))
-                    is FDATChunk -> list.lastOrNull()?.imageChunks?.add(chunk)
-                    is IDATChunk -> list.lastOrNull()?.imageChunks?.add(chunk)
-                }
-                list
-            }
-            for (it in frameDatas) {
-                frames += APNGFrame(
-                    reader,
-                    it.fctlChunk,
-                    result.ihdrChunk.data,
-                    result.prefixChunks,
-                    it.imageChunks
-                )
-            }
-        }
-
+        mLoopCount = result.actlChunk?.num_plays ?: 1
         val canvasWidth = result.ihdrChunk.width
         val canvasHeight = result.ihdrChunk.height
+
+        when {
+            isAnimated ->
+                result.frameDatas.mapTo(frames) {
+                    APNGFrame(
+                        reader,
+                        it.fctlChunk,
+                        result.ihdrChunk.data,
+                        result.prefixChunks,
+                        it.imageChunks
+                    )
+                }
+
+            result.hasIDATChunk ->
+                // If it is a non-APNG image, only PNG will be decoded
+                frames += StillFrame(reader).apply {
+                    frameWidth = canvasWidth
+                    frameHeight = canvasHeight
+                }
+        }
+
         val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
         snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
         return Rect(0, 0, canvasWidth, canvasHeight)
-    }
-
-    private class FrameData(val fctlChunk: FCTLChunk) {
-        val imageChunks: MutableList<DATChunk> = mutableListOf()
-    }
-
-    private fun createStillFrame(reader: FilterReader, canvasWidth: Int, canvasHeight: Int) {
-        // If it is a non-APNG image, only PNG will be decoded
-        val frame = StillFrame(reader).apply {
-            frameWidth = canvasWidth
-            frameHeight = canvasHeight
-        }
-        frames.add(frame)
-        mLoopCount = 1
     }
 
     override fun renderFrame(frame: Frame) {

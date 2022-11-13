@@ -57,15 +57,7 @@ class APNGFrame internal constructor(
             e.printStackTrace()
             return null
         }
-        val bytes = writer.toByteArray()
-        val options = createBitmapFactoryOptions(sampleSize, reusedBitmap)
-        val bitmap: Bitmap = try {
-            BitmapFactory.decodeByteArray(bytes, 0, frameSizeInBytes, options)
-        } catch (e: IllegalArgumentException) {
-            // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
-            val optionsFixed = createBitmapFactoryOptions(sampleSize, null)
-            BitmapFactory.decodeByteArray(bytes, 0, frameSizeInBytes, optionsFixed)
-        }
+        val bitmap = createBitmap(writer.toByteArray(), sampleSize, reusedBitmap)
 
         srcRect.set(0, 0, bitmap.width, bitmap.height)
 
@@ -74,6 +66,17 @@ class APNGFrame internal constructor(
         dstRect.set(destLeft, destTop, destLeft + bitmap.width, destTop + bitmap.height)
         canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
         return bitmap
+    }
+
+    private fun createBitmap(bytes: ByteArray, sampleSize: Int, reusedBitmap: Bitmap): Bitmap {
+        val options = createBitmapFactoryOptions(sampleSize, reusedBitmap)
+        return try {
+            BitmapFactory.decodeByteArray(bytes, 0, frameSizeInBytes, options)
+        } catch (e: IllegalArgumentException) {
+            // Problem decoding into existing bitmap when on Android 4.2.2 & 4.3
+            val optionsFixed = createBitmapFactoryOptions(sampleSize, null)
+            BitmapFactory.decodeByteArray(bytes, 0, frameSizeInBytes, optionsFixed)
+        }
     }
 
     private fun createBitmapFactoryOptions(
