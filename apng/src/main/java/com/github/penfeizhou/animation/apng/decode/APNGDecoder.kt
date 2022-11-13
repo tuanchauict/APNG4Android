@@ -54,31 +54,39 @@ class APNGDecoder(
         val isAnimated = result.actlChunk != null
         mLoopCount = result.actlChunk?.num_plays ?: 0
 
-        var lastFrame: APNGFrame? = null
-        val canvasWidth = result.ihdrChunk.width
-        val canvasHeight = result.ihdrChunk.height
-
         if (!isAnimated) {
             if (result.frameChunks.any { it is IDATChunk }) {
-                createStillFrame(reader, canvasWidth, canvasHeight)
+                createStillFrame(reader, result.ihdrChunk.width, result.ihdrChunk.height)
             }
         } else {
-            for (chunk in result.frameChunks) {
+            val frameDatas = result.frameChunks.fold(mutableListOf<FrameData>()) { list, chunk ->
                 when (chunk) {
-                    is FCTLChunk -> {
-                        val frame =
-                            APNGFrame(reader, chunk, result.ihdrChunk.data, result.prefixChunks)
-                        frames.add(frame)
-                        lastFrame = frame
-                    }
-                    is FDATChunk -> lastFrame?.imageChunks?.add(chunk)
-                    is IDATChunk -> lastFrame?.imageChunks?.add(chunk)
+                    is FCTLChunk -> list.add(FrameData(chunk))
+                    is FDATChunk -> list.lastOrNull()?.imageChunks?.add(chunk)
+                    is IDATChunk -> list.lastOrNull()?.imageChunks?.add(chunk)
                 }
+                list
+            }
+            for (it in frameDatas) {
+                frames += APNGFrame(
+                    reader,
+                    it.fctlChunk,
+                    result.ihdrChunk.data,
+                    result.prefixChunks,
+                    it.imageChunks
+                )
             }
         }
+
+        val canvasWidth = result.ihdrChunk.width
+        val canvasHeight = result.ihdrChunk.height
         val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
         snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
         return Rect(0, 0, canvasWidth, canvasHeight)
+    }
+
+    private class FrameData(val fctlChunk: FCTLChunk) {
+        val imageChunks: MutableList<DATChunk> = mutableListOf()
     }
 
     private fun createStillFrame(reader: FilterReader, canvasWidth: Int, canvasHeight: Int) {

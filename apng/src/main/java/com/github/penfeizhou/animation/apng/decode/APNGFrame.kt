@@ -17,12 +17,11 @@ class APNGFrame internal constructor(
     private val reader: FilterReader,
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,
-    private val prefixChunks: List<FramePrefixChunk>
+    private val prefixChunks: List<FramePrefixChunk>,
+    private val imageChunks: List<DATChunk>
 ) : Frame() {
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
-
-    internal val imageChunks: MutableList<DATChunk> = mutableListOf()
 
     private val frameSizeInBytes: Int by lazy {
         calculateFrameSizeInBytes()

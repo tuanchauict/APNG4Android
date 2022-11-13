@@ -10,17 +10,19 @@ object APNGReader {
         val buf = ensureBytes()
         read(buf, 0, 4)
         return (buf[3].toInt() and 0xFF) or
-                (buf[2].toInt() and 0xFF shl 8) or
-                (buf[1].toInt() and 0xFF shl 16) or
-                (buf[0].toInt() and 0xFF shl 24)
+            (buf[2].toInt() and 0xFF shl 8) or
+            (buf[1].toInt() and 0xFF shl 16) or
+            (buf[0].toInt() and 0xFF shl 24)
     }
 
     @Throws(IOException::class)
     fun FilterReader.readShort(): Short {
         val buf = ensureBytes()
         read(buf, 0, 2)
-        return (buf[1].toInt() and 0xFF or
-                (buf[0].toInt() and 0xFF shl 8)).toShort()
+        return (
+            buf[1].toInt() and 0xFF or
+                (buf[0].toInt() and 0xFF shl 8)
+            ).toShort()
     }
 
     /**
@@ -45,9 +47,9 @@ object APNGReader {
         val buf = ensureBytes()
         read(buf, 0, 4)
         return (buf[0].toInt() and 0xff) or
-                (buf[1].toInt() and 0xff shl 8) or
-                (buf[2].toInt() and 0xff shl 16) or
-                (buf[3].toInt() and 0xff shl 24)
+            (buf[1].toInt() and 0xff shl 8) or
+            (buf[2].toInt() and 0xff shl 16) or
+            (buf[3].toInt() and 0xff shl 24)
     }
 
     private val THREAD_LOCAL_BYTE_BUFFERS = ThreadLocal<ByteArray>()
