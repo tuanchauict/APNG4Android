@@ -33,7 +33,7 @@ internal class BitmapPool {
 
     fun recycle(bitmap: Bitmap?) {
         synchronized(this) {
-            if (bitmap != null) {
+            if (bitmap != null && !bitmap.isRecycled) {
                 pool.add(bitmap)
             }
         }
@@ -46,6 +46,7 @@ internal class BitmapPool {
                     bitmap.recycle()
                 }
             }
+            pool.clear()
         }
     }
 

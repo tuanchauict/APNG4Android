@@ -48,7 +48,7 @@ internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int) 
     }
 }
 
-internal class GeneralChunk(offset: Long, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)
+internal class FramePrefixChunk(offset: Long, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)
 
 internal sealed interface FrameChunk
 

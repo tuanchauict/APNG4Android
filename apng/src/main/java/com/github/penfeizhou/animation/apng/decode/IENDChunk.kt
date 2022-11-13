@@ -9,7 +9,7 @@ internal class IENDChunk(
     offset: Long,
     length: Int,
     fourCC: Int
-) : Chunk(offset, length, fourCC), FrameChunk {
+) : Chunk(offset, length, fourCC) {
     companion object {
         val ID = fourCCToInt("IEND")
     }

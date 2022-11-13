@@ -23,7 +23,7 @@ internal class IHDRChunk(
     offset: Long,
     length: Int,
     fourCC: Int
-) : Chunk(offset, length, fourCC), FrameChunk {
+) : Chunk(offset, length, fourCC) {
     /**
      * 图像宽度，以像素为单位
      */

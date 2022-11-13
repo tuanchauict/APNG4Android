@@ -13,7 +13,7 @@ internal class ACTLChunk(
     offset: Long,
     length: Int,
     fourCC: Int
-) : Chunk(offset, length, fourCC), FrameChunk {
+) : Chunk(offset, length, fourCC) {
     var num_frames = 0
     var num_plays = 0
 

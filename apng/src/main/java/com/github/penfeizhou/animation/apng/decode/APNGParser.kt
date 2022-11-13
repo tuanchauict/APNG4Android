@@ -100,14 +100,19 @@ object APNGParser {
             throw FormatException()
         }
         val frameChunks = mutableListOf<FrameChunk>()
-        val prefixChunks = mutableListOf<GeneralChunk>()
+        val prefixChunks = mutableListOf<FramePrefixChunk>()
+        var ihdrChunk = IHDRChunk(0, 0, IHDRChunk.ID)
+        var actlChunk: ACTLChunk? = null
         while (reader.available() > 0) {
             when (val chunk = parseChunk(reader)) {
                 is FrameChunk -> frameChunks.add(chunk)
-                is GeneralChunk -> prefixChunks.add(chunk)
+                is FramePrefixChunk -> prefixChunks.add(chunk)
+                is IHDRChunk -> ihdrChunk = chunk
+                is ACTLChunk -> actlChunk = chunk
+                is IENDChunk -> Unit
             }
         }
-        return ParseChunkResult(frameChunks, prefixChunks)
+        return ParseChunkResult(frameChunks, prefixChunks, ihdrChunk, actlChunk)
     }
 
     private fun FilterReader.isValid(): Boolean =
@@ -124,7 +129,7 @@ object APNGParser {
             IDATChunk.ID -> IDATChunk(offset, size, fourCC)
             IENDChunk.ID -> IENDChunk(offset, size, fourCC)
             IHDRChunk.ID -> IHDRChunk(offset, size, fourCC)
-            else -> GeneralChunk(offset, size, fourCC)
+            else -> FramePrefixChunk(offset, size, fourCC)
         }
         chunk.parse(reader)
         chunk.crc = reader.readInt()
@@ -135,6 +140,8 @@ object APNGParser {
 
     internal class ParseChunkResult(
         val frameChunks: List<FrameChunk>,
-        val prefixChunks: List<GeneralChunk>
+        val prefixChunks: List<FramePrefixChunk>,
+        val ihdrChunk: IHDRChunk,
+        val actlChunk: ACTLChunk?
     )
 }
