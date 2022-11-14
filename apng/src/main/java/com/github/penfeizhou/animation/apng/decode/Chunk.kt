@@ -1,7 +1,5 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import android.text.TextUtils
-
 /**
  * Length 4 bytes Specifies the length of the data field in the data block, which should not exceed (231-1) bytes
  * Chunk Type Code 4 bytes The Chunk Type Code consists of ASCII letters (A-Z and a-z).
@@ -15,15 +13,14 @@ internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int, 
     companion object {
         @JvmStatic
         fun fourCCToInt(fourCC: String): Int =
-            if (TextUtils.isEmpty(fourCC) || fourCC.length != 4) {
-                -0x45210001
+            if (fourCC.length == 4) {
+                // cc[0].code & 0xFF << 0 | cc[1].code & 0xFF << 8 |
+                // cc[2].code & 0xFF << 16 | cc[3].code & 0xFF << 24
+                fourCC
+                    .mapIndexed { index, char -> char.code and 0xff shl (index * 8) }
+                    .reduce { acc, value -> acc or value }
             } else {
-                (
-                    fourCC[0].code and 0xff
-                        or (fourCC[1].code and 0xff shl 8)
-                        or (fourCC[2].code and 0xff shl 16)
-                        or (fourCC[3].code and 0xff shl 24)
-                )
+                -0x45210001
             }
     }
 }
