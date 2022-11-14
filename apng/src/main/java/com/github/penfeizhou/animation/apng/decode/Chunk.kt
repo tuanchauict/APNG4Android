@@ -11,9 +11,7 @@ import android.text.TextUtils
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int) {
-    var crc = 0
-
+internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int, val crc: Int) {
     companion object {
         @JvmStatic
         fun fourCCToInt(fourCC: String): Int =
@@ -30,7 +28,12 @@ internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int) 
     }
 }
 
-internal class FramePrefixChunk(offset: Long, length: Int, fourCC: Int) : Chunk(offset, length, fourCC)
+internal class FramePrefixChunk(
+    offset: Long,
+    length: Int,
+    fourCC: Int,
+    crc: Int
+) : Chunk(offset, length, fourCC, crc)
 
 internal sealed interface FrameChunk
 

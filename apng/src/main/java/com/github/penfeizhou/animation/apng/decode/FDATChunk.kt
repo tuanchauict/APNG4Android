@@ -9,8 +9,9 @@ internal class FDATChunk(
     offset: Long,
     length: Int,
     fourCC: Int,
-    val sequence_number: Int
-) : Chunk(offset, length, fourCC), FrameChunk, DATChunk {
+    val sequence_number: Int,
+    crc: Int
+) : Chunk(offset, length, fourCC, crc), FrameChunk, DATChunk {
 
     companion object {
         val ID = fourCCToInt("fdAT")

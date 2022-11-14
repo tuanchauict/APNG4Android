@@ -8,8 +8,9 @@ package com.github.penfeizhou.animation.apng.decode
 internal class IDATChunk(
     offset: Long,
     length: Int,
-    fourCC: Int
-) : Chunk(offset, length, fourCC), FrameChunk, DATChunk {
+    fourCC: Int,
+    crc: Int
+) : Chunk(offset, length, fourCC, crc), FrameChunk, DATChunk {
     companion object {
         val ID = fourCCToInt("IDAT")
     }

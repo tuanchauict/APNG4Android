@@ -10,8 +10,9 @@ internal class ACTLChunk(
     length: Int,
     fourCC: Int,
     val num_frames: Int,
-    val num_plays: Int
-) : Chunk(offset, length, fourCC) {
+    val num_plays: Int,
+    crc: Int
+) : Chunk(offset, length, fourCC, crc) {
     companion object {
         val ID = fourCCToInt("acTL")
     }

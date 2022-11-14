@@ -20,11 +20,12 @@ internal class IHDRChunk(
     fourCC: Int,
     val width: Int,
     val height: Int,
-    val data: ByteArray
-) : Chunk(offset, length, fourCC) {
+    val data: ByteArray,
+    crc: Int
+) : Chunk(offset, length, fourCC, crc) {
 
     companion object {
         val ID = fourCCToInt("IHDR")
-        val DUMMY = IHDRChunk(0, 0, ID, 0, 0, byteArrayOf())
+        val DUMMY = IHDRChunk(0, 0, ID, 0, 0, byteArrayOf(), 0)
     }
 }

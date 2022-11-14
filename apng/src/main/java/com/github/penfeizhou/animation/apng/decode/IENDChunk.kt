@@ -8,8 +8,9 @@ package com.github.penfeizhou.animation.apng.decode
 internal class IENDChunk(
     offset: Long,
     length: Int,
-    fourCC: Int
-) : Chunk(offset, length, fourCC) {
+    fourCC: Int,
+    crc: Int
+) : Chunk(offset, length, fourCC, crc) {
     companion object {
         val ID = fourCCToInt("IEND")
     }

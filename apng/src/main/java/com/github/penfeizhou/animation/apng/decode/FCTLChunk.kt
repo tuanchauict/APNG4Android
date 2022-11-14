@@ -60,8 +60,10 @@ internal class FCTLChunk(
     /**
      * Type of frame area rendering for this frame.
      */
-    val blend_op: Byte = 0
-) : Chunk(offset, length, fourCC), FrameChunk {
+    val blend_op: Byte = 0,
+
+    crc: Int
+) : Chunk(offset, length, fourCC, crc), FrameChunk {
 
     /**
      * x_offset >= 0
