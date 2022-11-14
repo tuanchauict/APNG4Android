@@ -1,9 +1,5 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
-import com.github.penfeizhou.animation.io.FilterReader
-import java.io.IOException
-
 /**
  * @Description: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/APNG#.27fdAT.27:_The_Frame_Data_Chunk
  * @Author: pengfei.zhou
@@ -12,14 +8,9 @@ import java.io.IOException
 internal class FDATChunk(
     offset: Long,
     length: Int,
-    fourCC: Int
+    fourCC: Int,
+    val sequence_number: Int
 ) : Chunk(offset, length, fourCC), FrameChunk, DATChunk {
-    var sequence_number = 0
-
-    @Throws(IOException::class)
-    override fun innerParse(reader: FilterReader) {
-        sequence_number = reader.readInt()
-    }
 
     companion object {
         val ID = fourCCToInt("fdAT")

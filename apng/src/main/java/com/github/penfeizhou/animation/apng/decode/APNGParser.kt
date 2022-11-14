@@ -102,7 +102,7 @@ object APNGParser {
         }
         val frameDatas = mutableListOf<FrameData>()
         val prefixChunks = mutableListOf<FramePrefixChunk>()
-        var ihdrChunk = IHDRChunk(0, 0, IHDRChunk.ID)
+        var ihdrChunk = IHDRChunk.DUMMY
         var actlChunk: ACTLChunk? = null
         var hasIDATChunk = false
         while (reader.available() > 0) {
@@ -167,13 +167,19 @@ object APNGParser {
         fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk
 
         class ACTL(reader: FilterReader) : ChunkBodyParser {
+            // Number of frames, 4 bytes
             private val num_frames: Int = reader.readInt()
+            // Number of plays continuously, 4 bytes
             private val num_plays: Int = reader.readInt()
 
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                ACTLChunk(prefix.offset, prefix.length, prefix.fourCC).also {
-                    it.num_frames = num_frames
-                    it.num_plays = num_plays
+                ACTLChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC,
+                    num_frames = num_frames,
+                    num_plays = num_plays
+                ).also {
                     it.crc = crc
                 }
         }
@@ -190,16 +196,21 @@ object APNGParser {
             private val blend_op = reader.peek()
 
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                FCTLChunk(prefix.offset, prefix.length, prefix.fourCC).also {
-                    it.sequence_number = sequence_number
-                    it.width = width
-                    it.height = height
-                    it.x_offset = x_offset
-                    it.y_offset = y_offset
-                    it.delay_num = delay_num
-                    it.delay_den = delay_den
-                    it.dispose_op = dispose_op
-                    it.blend_op = blend_op
+                FCTLChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC,
+                    sequence_number = sequence_number,
+                    width = width,
+                    height = height,
+                    x_offset = x_offset,
+                    y_offset = y_offset,
+                    delay_num = delay_num,
+                    delay_den = delay_den,
+                    dispose_op = dispose_op,
+                    blend_op = blend_op,
+                ).also {
+
                     it.crc = crc
                 }
         }
@@ -207,22 +218,34 @@ object APNGParser {
         class FDAT(reader: FilterReader) : ChunkBodyParser {
             private val sequence_number = reader.readInt()
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                FDATChunk(prefix.offset, prefix.length, prefix.fourCC).also {
-                    it.sequence_number = sequence_number
+                FDATChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC,
+                    sequence_number = sequence_number
+                ).also {
                     it.crc = crc
                 }
         }
 
         object IDAT : ChunkBodyParser {
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                IDATChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                IDATChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC
+                ).also {
                     it.crc = crc
                 }
         }
 
         object IEND : ChunkBodyParser {
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                IENDChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                IENDChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC
+                ).also {
                     it.crc = crc
                 }
         }
@@ -233,17 +256,25 @@ object APNGParser {
             private val data = ByteArray(5).also { reader.read(it, 0, it.size) }
 
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                IHDRChunk(prefix.offset, prefix.length, prefix.fourCC).also {
-                    it.width = width
-                    it.height = height
-                    it.data = data
+                IHDRChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC,
+                    width = width,
+                    height = height,
+                    data = data
+                ).also {
                     it.crc = crc
                 }
         }
 
         object FramePrefix : ChunkBodyParser {
             override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
-                FramePrefixChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                FramePrefixChunk(
+                    offset = prefix.offset,
+                    length = prefix.length,
+                    fourCC = prefix.fourCC
+                ).also {
                     it.crc = crc
                 }
         }

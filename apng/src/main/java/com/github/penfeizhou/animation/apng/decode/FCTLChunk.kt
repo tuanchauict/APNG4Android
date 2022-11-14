@@ -1,10 +1,5 @@
 package com.github.penfeizhou.animation.apng.decode
 
-import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
-import com.github.penfeizhou.animation.apng.io.APNGReader.readShort
-import com.github.penfeizhou.animation.io.FilterReader
-import java.io.IOException
-
 /**
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
@@ -13,36 +8,27 @@ import java.io.IOException
 internal class FCTLChunk(
     offset: Long,
     length: Int,
-    fourCC: Int
-) : Chunk(offset, length, fourCC), FrameChunk {
-    var sequence_number = 0
-    /**
-     * x_offset >= 0
-     * y_offset >= 0
-     * width > 0
-     * height > 0
-     * x_offset + width <= 'IHDR' width
-     * y_offset + height <= 'IHDR' height
-     */
+    fourCC: Int,
+    val sequence_number: Int,
     /**
      * Width of the following frame.
      */
-    var width = 0
+    val width: Int,
 
     /**
      * Height of the following frame.
      */
-    var height = 0
+    val height: Int,
 
     /**
      * X position at which to render the following frame.
      */
-    var x_offset = 0
+    val x_offset: Int,
 
     /**
      * Y position at which to render the following frame.
      */
-    var y_offset = 0
+    val y_offset: Int,
     /**
      * The delay_num and delay_den parameters together specify a fraction indicating the time to
      * display the current frame, in seconds. If the denominator is 0, it is to be treated as if it
@@ -57,37 +43,34 @@ internal class FCTLChunk(
     /**
      * Frame delay fraction numerator.
      */
-    var delay_num: Short = 0
+    val delay_num: Short,
 
     /**
      * Frame delay fraction denominator.
      */
-    var delay_den: Short = 0
+    val delay_den: Short,
 
     /**
      * Type of frame area disposal to be done after rendering this frame.
      * dispose_op specifies how the output buffer should be changed at the end of the delay (before rendering the next frame).
      * If the first 'fcTL' chunk uses a dispose_op of APNG_DISPOSE_OP_PREVIOUS it should be treated as APNG_DISPOSE_OP_BACKGROUND.
      */
-    var dispose_op: Byte = 0
+    val dispose_op: Byte,
 
     /**
      * Type of frame area rendering for this frame.
      */
-    var blend_op: Byte = 0
+    val blend_op: Byte = 0
+) : Chunk(offset, length, fourCC), FrameChunk {
 
-    @Throws(IOException::class)
-    override fun innerParse(reader: FilterReader) {
-        sequence_number = reader.readInt()
-        width = reader.readInt()
-        height = reader.readInt()
-        x_offset = reader.readInt()
-        y_offset = reader.readInt()
-        delay_num = reader.readShort()
-        delay_den = reader.readShort()
-        dispose_op = reader.peek()
-        blend_op = reader.peek()
-    }
+    /**
+     * x_offset >= 0
+     * y_offset >= 0
+     * width > 0
+     * height > 0
+     * x_offset + width <= 'IHDR' width
+     * y_offset + height <= 'IHDR' height
+     */
 
     companion object {
         val ID = fourCCToInt("fcTL")

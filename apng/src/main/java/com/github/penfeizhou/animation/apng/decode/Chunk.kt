@@ -1,9 +1,6 @@
 package com.github.penfeizhou.animation.apng.decode
 
 import android.text.TextUtils
-import com.github.penfeizhou.animation.io.FilterReader
-import java.io.IOException
-import kotlin.Throws
 
 /**
  * Length 4 bytes Specifies the length of the data field in the data block, which should not exceed (231-1) bytes
@@ -16,21 +13,6 @@ import kotlin.Throws
  */
 internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int) {
     var crc = 0
-
-    @Throws(IOException::class)
-    fun parse(reader: FilterReader) {
-        val available = reader.available()
-        innerParse(reader)
-        val offset = available - reader.available()
-        if (offset > length) {
-            throw IOException("Out of chunk area")
-        } else if (offset < length) {
-            reader.skip((length - offset).toLong())
-        }
-    }
-
-    @Throws(IOException::class)
-    open fun innerParse(reader: FilterReader) = Unit
 
     companion object {
         @JvmStatic
