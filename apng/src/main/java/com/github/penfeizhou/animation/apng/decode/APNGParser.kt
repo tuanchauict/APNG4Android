@@ -4,6 +4,7 @@ import android.content.Context
 import com.github.penfeizhou.animation.apng.io.APNGReader.matchFourCC
 import com.github.penfeizhou.animation.apng.io.APNGReader.readFourCC
 import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.apng.io.APNGReader.readShort
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Reader
 import com.github.penfeizhou.animation.io.StreamReader
@@ -126,20 +127,126 @@ object APNGParser {
 
     @Throws(IOException::class)
     private fun parseChunk(reader: FilterReader): Chunk {
-        val offset = reader.position().toLong()
-        val size = reader.readInt()
-        val chunk = when (val fourCC = reader.readFourCC()) {
-            ACTLChunk.ID -> ACTLChunk(offset, size, fourCC)
-            FCTLChunk.ID -> FCTLChunk(offset, size, fourCC)
-            FDATChunk.ID -> FDATChunk(offset, size, fourCC)
-            IDATChunk.ID -> IDATChunk(offset, size, fourCC)
-            IENDChunk.ID -> IENDChunk(offset, size, fourCC)
-            IHDRChunk.ID -> IHDRChunk(offset, size, fourCC)
-            else -> FramePrefixChunk(offset, size, fourCC)
+        val prefix = ChunkPrefix(
+            offset = reader.position().toLong(),
+            length = reader.readInt(),
+            fourCC = reader.readFourCC()
+        )
+        return parseChunkDetail(reader, prefix)
+    }
+
+    private fun parseChunkDetail(reader: FilterReader, prefix: ChunkPrefix): Chunk {
+        val available = reader.available()
+        val chunkBody = when (prefix.fourCC) {
+            ACTLChunk.ID -> ChunkBodyParser.ACTL(reader)
+            FCTLChunk.ID -> ChunkBodyParser.FCTL(reader)
+            FDATChunk.ID -> ChunkBodyParser.FDAT(reader)
+            IDATChunk.ID -> ChunkBodyParser.IDAT
+            IENDChunk.ID -> ChunkBodyParser.IEND
+            IHDRChunk.ID -> ChunkBodyParser.IHDR(reader)
+            else -> ChunkBodyParser.FramePrefix
         }
-        chunk.parse(reader)
-        chunk.crc = reader.readInt()
-        return chunk
+        val offset = available - reader.available()
+        when {
+            offset > prefix.length -> throw IOException("Out of chunk area")
+            offset < prefix.length -> reader.skip(prefix.length.toLong() - offset)
+        }
+        val crc = reader.readInt()
+
+        return chunkBody.toChunk(prefix, crc)
+    }
+
+    private class ChunkPrefix(val offset: Long, val length: Int, val fourCC: Int)
+
+    /**
+     * A parser of chunk body.
+     * The order of attributes in the child classes are by purposed, DO NOT CHANGE THE ORDER.
+     */
+    @Suppress("PrivatePropertyName", "SpellCheckingInspection")
+    private sealed interface ChunkBodyParser {
+        fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk
+
+        class ACTL(reader: FilterReader) : ChunkBodyParser {
+            private val num_frames: Int = reader.readInt()
+            private val num_plays: Int = reader.readInt()
+
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                ACTLChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.num_frames = num_frames
+                    it.num_plays = num_plays
+                    it.crc = crc
+                }
+        }
+
+        class FCTL(reader: FilterReader) : ChunkBodyParser {
+            private val sequence_number = reader.readInt()
+            private val width = reader.readInt()
+            private val height = reader.readInt()
+            private val x_offset = reader.readInt()
+            private val y_offset = reader.readInt()
+            private val delay_num = reader.readShort()
+            private val delay_den = reader.readShort()
+            private val dispose_op = reader.peek()
+            private val blend_op = reader.peek()
+
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                FCTLChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.sequence_number = sequence_number
+                    it.width = width
+                    it.height = height
+                    it.x_offset = x_offset
+                    it.y_offset = y_offset
+                    it.delay_num = delay_num
+                    it.delay_den = delay_den
+                    it.dispose_op = dispose_op
+                    it.blend_op = blend_op
+                    it.crc = crc
+                }
+        }
+
+        class FDAT(reader: FilterReader) : ChunkBodyParser {
+            private val sequence_number = reader.readInt()
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                FDATChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.sequence_number = sequence_number
+                    it.crc = crc
+                }
+        }
+
+        object IDAT : ChunkBodyParser {
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                IDATChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.crc = crc
+                }
+        }
+
+        object IEND : ChunkBodyParser {
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                IENDChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.crc = crc
+                }
+        }
+
+        class IHDR(reader: FilterReader) : ChunkBodyParser {
+            private val width = reader.readInt()
+            private val height = reader.readInt()
+            private val data = ByteArray(5).also { reader.read(it, 0, it.size) }
+
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                IHDRChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.width = width
+                    it.height = height
+                    it.data = data
+                    it.crc = crc
+                }
+        }
+
+        object FramePrefix : ChunkBodyParser {
+            override fun toChunk(prefix: ChunkPrefix, crc: Int): Chunk =
+                FramePrefixChunk(prefix.offset, prefix.length, prefix.fourCC).also {
+                    it.crc = crc
+                }
+        }
     }
 
     internal class FormatException : IOException("APNG Format error")
