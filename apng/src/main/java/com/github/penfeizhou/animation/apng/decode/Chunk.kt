@@ -23,7 +23,7 @@ internal sealed class Chunk(val offset: Long, val length: Int, val fourCC: Int, 
                         or (fourCC[1].code and 0xff shl 8)
                         or (fourCC[2].code and 0xff shl 16)
                         or (fourCC[3].code and 0xff shl 24)
-                    )
+                )
             }
     }
 }
@@ -33,7 +33,16 @@ internal class FramePrefixChunk(
     length: Int,
     fourCC: Int,
     crc: Int
-) : Chunk(offset, length, fourCC, crc)
+) : Chunk(offset, length, fourCC, crc) {
+    object Parser : APNGParser.ChunkBodyParser {
+        override fun toChunk(prefix: APNGParser.ChunkPrefix, crc: Int): Chunk = FramePrefixChunk(
+            offset = prefix.offset,
+            length = prefix.length,
+            fourCC = prefix.fourCC,
+            crc = crc
+        )
+    }
+}
 
 internal sealed interface FrameChunk
 

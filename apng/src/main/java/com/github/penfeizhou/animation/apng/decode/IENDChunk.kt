@@ -11,6 +11,16 @@ internal class IENDChunk(
     fourCC: Int,
     crc: Int
 ) : Chunk(offset, length, fourCC, crc) {
+
+    object Parser : APNGParser.ChunkBodyParser {
+        override fun toChunk(prefix: APNGParser.ChunkPrefix, crc: Int): Chunk = IENDChunk(
+            offset = prefix.offset,
+            length = prefix.length,
+            fourCC = prefix.fourCC,
+            crc = crc
+        )
+    }
+
     companion object {
         val ID = fourCCToInt("IEND")
     }

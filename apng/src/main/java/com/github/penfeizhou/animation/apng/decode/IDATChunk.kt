@@ -11,6 +11,16 @@ internal class IDATChunk(
     fourCC: Int,
     crc: Int
 ) : Chunk(offset, length, fourCC, crc), FrameChunk, DATChunk {
+
+    object Parser : APNGParser.ChunkBodyParser {
+        override fun toChunk(prefix: APNGParser.ChunkPrefix, crc: Int): Chunk = IDATChunk(
+            offset = prefix.offset,
+            length = prefix.length,
+            fourCC = prefix.fourCC,
+            crc = crc
+        )
+    }
+
     companion object {
         val ID = fourCCToInt("IDAT")
     }

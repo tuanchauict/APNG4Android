@@ -1,9 +1,20 @@
 package com.github.penfeizhou.animation.apng.decode
 
+import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.apng.io.APNGReader.readShort
+import com.github.penfeizhou.animation.io.FilterReader
+
 /**
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  * @see {link=https://developer.mozilla.org/en-US/docs/Mozilla/Tech/APNG..27fcTL.27:_The_Frame_Control_Chunk}
+ *
+ * x_offset >= 0
+ * y_offset >= 0
+ * width > 0
+ * height > 0
+ * x_offset + width <= 'IHDR' width
+ * y_offset + height <= 'IHDR' height
  */
 internal class FCTLChunk(
     offset: Long,
@@ -65,14 +76,33 @@ internal class FCTLChunk(
     crc: Int
 ) : Chunk(offset, length, fourCC, crc), FrameChunk {
 
-    /**
-     * x_offset >= 0
-     * y_offset >= 0
-     * width > 0
-     * height > 0
-     * x_offset + width <= 'IHDR' width
-     * y_offset + height <= 'IHDR' height
-     */
+    class Parser(reader: FilterReader) : APNGParser.ChunkBodyParser {
+        private val sequence_number = reader.readInt()
+        private val width = reader.readInt()
+        private val height = reader.readInt()
+        private val x_offset = reader.readInt()
+        private val y_offset = reader.readInt()
+        private val delay_num = reader.readShort()
+        private val delay_den = reader.readShort()
+        private val dispose_op = reader.peek()
+        private val blend_op = reader.peek()
+
+        override fun toChunk(prefix: APNGParser.ChunkPrefix, crc: Int): Chunk = FCTLChunk(
+            offset = prefix.offset,
+            length = prefix.length,
+            fourCC = prefix.fourCC,
+            sequence_number = sequence_number,
+            width = width,
+            height = height,
+            x_offset = x_offset,
+            y_offset = y_offset,
+            delay_num = delay_num,
+            delay_den = delay_den,
+            dispose_op = dispose_op,
+            blend_op = blend_op,
+            crc = crc
+        )
+    }
 
     companion object {
         val ID = fourCCToInt("fcTL")
@@ -94,7 +124,7 @@ internal class FCTLChunk(
         /**
          * blend_op` specifies whether the frame is to be alpha blended into the current output buffer content,
          * or whether it should completely replace its region in the output buffer.
-         ` */
+        ` */
         /**
          * All color components of the frame, including alpha, overwrite the current contents of the frame's output buffer region.
          */

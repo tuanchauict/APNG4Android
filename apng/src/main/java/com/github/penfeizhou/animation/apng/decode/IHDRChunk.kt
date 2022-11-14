@@ -1,5 +1,8 @@
 package com.github.penfeizhou.animation.apng.decode
 
+import com.github.penfeizhou.animation.apng.io.APNGReader.readInt
+import com.github.penfeizhou.animation.io.FilterReader
+
 /**
  * The IHDR chunk shall be the first chunk in the PNG datastream. It contains:
  *
@@ -23,6 +26,22 @@ internal class IHDRChunk(
     val data: ByteArray,
     crc: Int
 ) : Chunk(offset, length, fourCC, crc) {
+
+    class Parser(reader: FilterReader) : APNGParser.ChunkBodyParser {
+        private val width = reader.readInt()
+        private val height = reader.readInt()
+        private val data = ByteArray(5).also { reader.read(it, 0, it.size) }
+
+        override fun toChunk(prefix: APNGParser.ChunkPrefix, crc: Int): Chunk = IHDRChunk(
+            offset = prefix.offset,
+            length = prefix.length,
+            fourCC = prefix.fourCC,
+            width = width,
+            height = height,
+            data = data,
+            crc = crc
+        )
+    }
 
     companion object {
         val ID = fourCCToInt("IHDR")
