@@ -14,6 +14,7 @@ import java.util.zip.CRC32
 import kotlin.concurrent.getOrSet
 
 class APNGFrame internal constructor(
+    val index: Int,
     private val reader: FilterReader,
     fctlChunk: FCTLChunk,
     private val ihdrData: ByteArray,

@@ -58,13 +58,14 @@ class APNGDecoder(
 
         when {
             isAnimated ->
-                result.frameDatas.mapTo(frames) {
+                result.frameDatas.mapIndexedTo(frames) { index, frameData ->
                     APNGFrame(
+                        index,
                         reader,
-                        it.fctlChunk,
+                        frameData.fctlChunk,
                         result.ihdrChunk.data,
                         result.prefixChunks,
-                        it.imageChunks
+                        frameData.imageChunks
                     )
                 }
 
@@ -96,7 +97,7 @@ class APNGDecoder(
                 frameBuffer?.rewind()
                 bitmap.copyPixelsFromBuffer(frameBuffer)
                 // Process the settings in the snapshot before starting to draw
-                if (frameIndex == 0) {
+                if (frame.index == 0) {
                     canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
                 } else {
                     canvas.save()
