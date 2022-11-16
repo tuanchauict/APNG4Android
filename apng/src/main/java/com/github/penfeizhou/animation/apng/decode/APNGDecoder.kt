@@ -71,10 +71,7 @@ class APNGDecoder(
 
             result.hasIDATChunk ->
                 // If it is a non-APNG image, only PNG will be decoded
-                frames += StillFrame(reader).apply {
-                    frameWidth = canvasWidth
-                    frameHeight = canvasHeight
-                }
+                frames += StillFrame(reader, canvasWidth, canvasHeight)
         }
 
         val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
