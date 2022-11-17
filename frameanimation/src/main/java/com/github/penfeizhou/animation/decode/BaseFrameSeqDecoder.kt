@@ -17,8 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
 abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener: RenderListener?) {
-    protected var frameBuffer: ByteBuffer? = null
-        private set
+    private var frameBuffer: ByteBuffer? = null
 
     protected val frames: MutableList<Frame> = mutableListOf()
 
@@ -150,7 +149,8 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             playCount += 1
         }
         val frame = getFrame(frameIndex) ?: return 0
-        renderFrame(frame)
+        val frameBuffer = frameBuffer ?: return 0
+        renderFrame(frame, frameBuffer)
         return frame.frameDuration.toLong()
     }
 
@@ -278,7 +278,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
-    protected abstract fun renderFrame(frame: Frame)
+    protected abstract fun renderFrame(frame: Frame, frameBuffer: ByteBuffer)
 
     fun getFrame(index: Int): Frame? = frames.getOrNull(index)
 

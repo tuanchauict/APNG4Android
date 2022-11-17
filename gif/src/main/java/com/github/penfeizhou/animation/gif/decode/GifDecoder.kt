@@ -77,14 +77,13 @@ class GifDecoder(
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(frame: Frame) {
+    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
         val gifFrame = frame as GifFrame
         val bitmap =
             obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)
                 ?: return
         val canvas = getCanvas(bitmap)
 
-        val frameBuffer = frameBuffer ?: return
         frameBuffer.rewind()
         bitmap.copyPixelsFromBuffer(frameBuffer)
         var backgroundColor = Color.TRANSPARENT

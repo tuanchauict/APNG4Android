@@ -81,9 +81,8 @@ class APNGDecoder(
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame) {
+    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
         val fullRect = fullRect ?: return
-        val frameBuffer = frameBuffer ?: return
         try {
             val bitmap =
                 obtainBitmap(

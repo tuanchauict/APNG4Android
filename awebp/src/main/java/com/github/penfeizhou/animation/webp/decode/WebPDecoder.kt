@@ -14,6 +14,7 @@ import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * @param loader         webp stream loader
@@ -85,7 +86,7 @@ class WebPDecoder(
         return Rect(0, 0, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame) {
+    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
         if (fullRect == null) {
             return
         }
@@ -96,7 +97,7 @@ class WebPDecoder(
             ?: return
         val canvas = getCanvas(bitmap)
         // 从缓存中恢复当前帧
-        frameBuffer!!.rewind()
+        frameBuffer.rewind()
         bitmap.copyPixelsFromBuffer(frameBuffer)
         if (frameIndex == 0) {
             if (alpha) {
@@ -125,7 +126,7 @@ class WebPDecoder(
         }
         recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, writer))
         recycleBitmap(inBitmap)
-        frameBuffer!!.rewind()
+        frameBuffer.rewind()
         bitmap.copyPixelsToBuffer(frameBuffer)
         recycleBitmap(bitmap)
     }
