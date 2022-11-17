@@ -1,5 +1,7 @@
 package com.github.penfeizhou.animation.apng.decode
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -81,6 +83,7 @@ class APNGDecoder(
 
     override fun renderFrame(frame: Frame) {
         val fullRect = fullRect ?: return
+        val frameBuffer = frameBuffer ?: return
         try {
             val bitmap =
                 obtainBitmap(
@@ -90,62 +93,72 @@ class APNGDecoder(
             val canvas = getCanvas(bitmap)
 
             if (frame is APNGFrame) {
-                // Restore the current frame from the cache
-                frameBuffer?.rewind()
-                bitmap.copyPixelsFromBuffer(frameBuffer)
-                // Process the settings in the snapshot before starting to draw
-                if (frame.index == 0) {
-                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                } else {
-                    canvas.save()
-                    canvas.clipRect(snapShot.dstRect)
-                    when (snapShot.disposeOp) {
-                        FCTLChunk.APNG_DISPOSE_OP_PREVIOUS -> {
-                            snapShot.byteBuffer?.rewind()
-                            bitmap.copyPixelsFromBuffer(snapShot.byteBuffer)
-                        }
-                        FCTLChunk.APNG_DISPOSE_OP_BACKGROUND ->
-                            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                        FCTLChunk.APNG_DISPOSE_OP_NON -> Unit
-                    }
-                    canvas.restore()
-                }
-
-                // Then pass it to the snapshot information according to the dispose setting
-                if (frame.disposeOp == FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
-                    if (snapShot.disposeOp != FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
-                        snapShot.byteBuffer?.rewind()
-                        bitmap.copyPixelsToBuffer(snapShot.byteBuffer)
-                    }
-                }
-                snapShot.disposeOp = frame.disposeOp
-                canvas.save()
-                if (frame.blendOp == FCTLChunk.APNG_BLEND_OP_SOURCE) {
-                    canvas.clipRect(
-                        frame.frameX / sampleSize,
-                        frame.frameY / sampleSize,
-                        (frame.frameX + frame.frameWidth) / sampleSize,
-                        (frame.frameY + frame.frameHeight) / sampleSize
-                    )
-                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                }
-                snapShot.dstRect.set(
-                    frame.frameX / sampleSize,
-                    frame.frameY / sampleSize,
-                    (frame.frameX + frame.frameWidth) / sampleSize,
-                    (frame.frameY + frame.frameHeight) / sampleSize
-                )
-                canvas.restore()
+                prepareApngBitmap(frame, bitmap, canvas, frameBuffer)
             }
             // Start actually drawing the content of the current frame
             val inBitmap = obtainBitmap(frame.frameWidth, frame.frameHeight)
             recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, apngWriter))
             recycleBitmap(inBitmap)
-            frameBuffer?.rewind()
+            frameBuffer.rewind()
             bitmap.copyPixelsToBuffer(frameBuffer)
             recycleBitmap(bitmap)
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    // TODO: Not sure this is a suitable name
+    private fun prepareApngBitmap(
+        frame: APNGFrame,
+        bitmap: Bitmap,
+        canvas: Canvas,
+        frameBuffer: ByteBuffer
+    ) {
+        // Restore the current frame from the cache
+        frameBuffer.rewind()
+        bitmap.copyPixelsFromBuffer(frameBuffer)
+        // Process the settings in the snapshot before starting to draw
+        if (frame.index == 0) {
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        } else {
+            canvas.save()
+            canvas.clipRect(snapShot.dstRect)
+            when (snapShot.disposeOp) {
+                FCTLChunk.APNG_DISPOSE_OP_PREVIOUS -> {
+                    snapShot.byteBuffer?.rewind()
+                    bitmap.copyPixelsFromBuffer(snapShot.byteBuffer)
+                }
+                FCTLChunk.APNG_DISPOSE_OP_BACKGROUND ->
+                    canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                FCTLChunk.APNG_DISPOSE_OP_NON -> Unit
+            }
+            canvas.restore()
+        }
+
+        // Then pass it to the snapshot information according to the dispose setting
+        if (frame.disposeOp == FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
+            if (snapShot.disposeOp != FCTLChunk.APNG_DISPOSE_OP_PREVIOUS) {
+                snapShot.byteBuffer?.rewind()
+                bitmap.copyPixelsToBuffer(snapShot.byteBuffer)
+            }
+        }
+        snapShot.disposeOp = frame.disposeOp
+        canvas.save()
+        if (frame.blendOp == FCTLChunk.APNG_BLEND_OP_SOURCE) {
+            canvas.clipRect(
+                frame.frameX / sampleSize,
+                frame.frameY / sampleSize,
+                (frame.frameX + frame.frameWidth) / sampleSize,
+                (frame.frameY + frame.frameHeight) / sampleSize
+            )
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        }
+        snapShot.dstRect.set(
+            frame.frameX / sampleSize,
+            frame.frameY / sampleSize,
+            (frame.frameX + frame.frameWidth) / sampleSize,
+            (frame.frameY + frame.frameHeight) / sampleSize
+        )
+        canvas.restore()
     }
 }
