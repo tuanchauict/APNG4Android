@@ -12,6 +12,9 @@ abstract class FrameSeqDecoder2(
     renderListener: RenderListener?
 ) : BaseFrameSeqDecoder(loader, renderListener) {
 
+    /**
+     * Returns true when the sample size is changed.
+     */
     fun setDesiredSize(width: Int, height: Int): Boolean {
         val sample = getDesiredSample(width, height)
         if (sample == sampleSize) {
@@ -39,10 +42,10 @@ abstract class FrameSeqDecoder2(
         if (desiredWidth == 0 || desiredHeight == 0) {
             return 1
         }
-        val bound = getBounds()
+        val bound = getViewport()
         val radio = min(
-            bound.width() / desiredWidth,
-            bound.height() / desiredHeight
+            bound.width / desiredWidth,
+            bound.height / desiredHeight
         )
         return if (radio > 0) radio.takeHighestOneBit() else 1
     }
@@ -70,10 +73,10 @@ abstract class FrameSeqDecoder2(
             }
         }
         val nonNullFrameBuffer = currentFrameBuffer ?: return null
-        val bounds = getBounds()
+        val bounds = getViewport()
         val bitmap = Bitmap.createBitmap(
-            bounds.width() / sampleSize,
-            bounds.height() / sampleSize,
+            bounds.width / sampleSize,
+            bounds.height / sampleSize,
             Bitmap.Config.ARGB_8888
         )
         bitmap.copyPixelsFromBuffer(nonNullFrameBuffer)

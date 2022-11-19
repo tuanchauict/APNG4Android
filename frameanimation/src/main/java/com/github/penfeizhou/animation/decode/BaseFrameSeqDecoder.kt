@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.util.Size
 import androidx.annotation.WorkerThread
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.FilterReader
@@ -81,7 +82,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             ""
         }
 
-    fun getBounds(): Rect {
+    fun getViewport(): Size {
         if (imageInfo == null) {
             if (state == State.FINISHING) {
                 Log.e(TAG, "$debugInfo in finishing. Do not interrupt")
@@ -102,8 +103,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             LockSupport.park(thread)
         }
         val imageInfo = imageInfo ?: ImageInfo.EMPTY
-
-        return Rect(0, 0, imageInfo.viewport.width, imageInfo.viewport.height)
+        return imageInfo.viewport
     }
 
     /**

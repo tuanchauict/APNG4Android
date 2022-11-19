@@ -12,7 +12,6 @@ import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.util.Log
 import androidx.vectordrawable.graphics.drawable.Animatable2Compat
 import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder
@@ -21,45 +20,40 @@ import com.github.penfeizhou.animation.decode.RenderListener
 import com.github.penfeizhou.animation.loader.Loader
 import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
+import kotlin.math.max
 
 abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListener {
-    private val paint = Paint()
+    private val paint = Paint().apply { isAntiAlias = true }
     val frameSeqDecoder: FrameSeqDecoder2
     private val drawFilter: DrawFilter =
         PaintFlagsDrawFilter(0, Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val matrix = Matrix()
-    private val animationCallbacks: MutableSet<Animatable2Compat.AnimationCallback> = HashSet()
+    private val animationCallbacks = mutableSetOf<Animatable2Compat.AnimationCallback>()
+
     private var bitmap: Bitmap? = null
-    private val uiHandler: Handler = object : Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message) {
-            when (msg.what) {
-                MSG_ANIMATION_START -> {
-                    val callbacks = ArrayList(animationCallbacks)
-                    for (animationCallback in callbacks) {
-                        animationCallback.onAnimationStart(this@FrameAnimationDrawable)
-                    }
-                }
-                MSG_ANIMATION_END -> {
-                    val callbacks = ArrayList(animationCallbacks)
-                    for (animationCallback in callbacks) {
-                        animationCallback.onAnimationEnd(this@FrameAnimationDrawable)
-                    }
-                }
-            }
-        }
-    }
+    private val unrecycledBitmap: Bitmap?
+        get() = bitmap?.takeUnless { it.isRecycled }
+
+    private val uiHandler: Handler = Handler(Looper.getMainLooper())
     private val invalidateRunnable = Runnable { invalidateSelf() }
     private var autoPlay = true
     private val obtainedCallbacks: MutableSet<WeakReference<Callback?>> = HashSet()
     private var noMeasure = false
 
+    val isPaused: Boolean
+        get() = frameSeqDecoder.isPaused()
+
+    val memorySize: Int
+        get() {
+            val bitmapSize = unrecycledBitmap?.allocationByteCount ?: 0
+            return max(frameSeqDecoder.getMemorySize() + bitmapSize, 1)
+        }
+
     constructor(frameSeqDecoder: FrameSeqDecoder2) {
-        paint.isAntiAlias = true
         this.frameSeqDecoder = frameSeqDecoder
     }
 
     constructor(provider: Loader?) {
-        paint.isAntiAlias = true
         frameSeqDecoder = createFrameSeqDecoder(provider, this)
     }
 
@@ -84,9 +78,7 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
     }
 
     fun reset() {
-        if (bitmap != null && !bitmap!!.isRecycled) {
-            bitmap!!.eraseColor(Color.TRANSPARENT)
-        }
+        unrecycledBitmap?.eraseColor(Color.TRANSPARENT)
         frameSeqDecoder.reset()
     }
 
@@ -97,9 +89,6 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
     fun resume() {
         frameSeqDecoder.resume()
     }
-
-    val isPaused: Boolean
-        get() = frameSeqDecoder.isPaused()
 
     override fun start() {
         if (frameSeqDecoder.isRunning) {
@@ -114,18 +103,12 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
             Log.d(TAG, "$this,start")
         }
         frameSeqDecoder.addRenderListener(this)
-        if (autoPlay) {
+        if (autoPlay || !frameSeqDecoder.isRunning) {
             frameSeqDecoder.start()
-        } else {
-            if (!frameSeqDecoder.isRunning) {
-                frameSeqDecoder.start()
-            }
         }
     }
 
-    override fun stop() {
-        innerStop()
-    }
+    override fun stop() = innerStop()
 
     private fun innerStop() {
         if (BaseFrameSeqDecoder.DEBUG) {
@@ -139,31 +122,31 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         }
     }
 
-    override fun isRunning(): Boolean {
-        return frameSeqDecoder.isRunning
-    }
+    override fun isRunning(): Boolean = frameSeqDecoder.isRunning
 
     override fun draw(canvas: Canvas) {
-        if (bitmap == null || bitmap!!.isRecycled) {
-            return
-        }
+        val bitmap = unrecycledBitmap ?: return
         canvas.drawFilter = drawFilter
-        canvas.drawBitmap(bitmap!!, matrix, paint)
+        canvas.drawBitmap(bitmap, matrix, paint)
     }
 
     override fun setBounds(left: Int, top: Int, right: Int, bottom: Int) {
         super.setBounds(left, top, right, bottom)
-        val sampleSizeChanged = frameSeqDecoder.setDesiredSize(bounds.width(), bounds.height())
+
+        val isSampleSizeChanged = frameSeqDecoder.setDesiredSize(bounds.width(), bounds.height())
         val sampleSize = frameSeqDecoder.sampleSize
+        val viewport = frameSeqDecoder.getViewport()
         matrix.setScale(
-            1.0f * bounds.width() * sampleSize / frameSeqDecoder.getBounds().width(),
-            1.0f * bounds.height() * sampleSize / frameSeqDecoder.getBounds().height()
+            1.0f * bounds.width() * sampleSize / viewport.width,
+            1.0f * bounds.height() * sampleSize / viewport.height
         )
-        if (sampleSizeChanged) bitmap = Bitmap.createBitmap(
-            frameSeqDecoder.getBounds().width() / sampleSize,
-            frameSeqDecoder.getBounds().height() / sampleSize,
-            Bitmap.Config.ARGB_8888
-        )
+        if (isSampleSizeChanged) {
+            bitmap = Bitmap.createBitmap(
+                viewport.width / sampleSize,
+                viewport.height / sampleSize,
+                Bitmap.Config.ARGB_8888
+            )
+        }
     }
 
     override fun setAlpha(alpha: Int) {
@@ -174,37 +157,40 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         paint.colorFilter = colorFilter
     }
 
-    override fun getOpacity(): Int {
-        return PixelFormat.TRANSLUCENT
-    }
+    override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 
     override fun onStart() {
-        Message.obtain(uiHandler, MSG_ANIMATION_START).sendToTarget()
+        for (animationCallback in animationCallbacks.asIterable()) {
+            animationCallback.onAnimationStart(this@FrameAnimationDrawable)
+        }
+    }
+
+    override fun onEnd() {
+        uiHandler.post {
+            for (animationCallback in animationCallbacks.asIterable()) {
+                animationCallback.onAnimationEnd(this@FrameAnimationDrawable)
+            }
+        }
     }
 
     override fun onRender(byteBuffer: ByteBuffer) {
         if (!isRunning) {
             return
         }
-        if (bitmap == null || bitmap!!.isRecycled) {
-            val sampleSize = frameSeqDecoder.sampleSize
-            bitmap = Bitmap.createBitmap(
-                frameSeqDecoder.getBounds().width() / sampleSize,
-                frameSeqDecoder.getBounds().height() / sampleSize,
-                Bitmap.Config.ARGB_8888
-            )
-        }
+        val bitmap = unrecycledBitmap ?: Bitmap.createBitmap(
+            frameSeqDecoder.getViewport().width / frameSeqDecoder.sampleSize,
+            frameSeqDecoder.getViewport().height / frameSeqDecoder.sampleSize,
+            Bitmap.Config.ARGB_8888
+        )
+        this.bitmap = bitmap
+
         byteBuffer.rewind()
-        if (byteBuffer.remaining() < bitmap!!.byteCount) {
+        if (byteBuffer.remaining() < bitmap.byteCount) {
             Log.e(TAG, "onRender:Buffer not large enough for pixels")
             return
         }
-        bitmap!!.copyPixelsFromBuffer(byteBuffer)
+        bitmap.copyPixelsFromBuffer(byteBuffer)
         uiHandler.post(invalidateRunnable)
-    }
-
-    override fun onEnd() {
-        Message.obtain(uiHandler, MSG_ANIMATION_END).sendToTarget()
     }
 
     override fun setVisible(visible: Boolean, restart: Boolean): Boolean {
@@ -224,22 +210,23 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         return super.setVisible(visible, restart)
     }
 
-    override fun getIntrinsicWidth(): Int {
-        return if (noMeasure) {
+    override fun getIntrinsicWidth(): Int =
+        if (noMeasure) {
             -1
-        } else try {
-            frameSeqDecoder.getBounds().width()
-        } catch (exception: Exception) {
-            0
+        } else {
+            try {
+                frameSeqDecoder.getViewport().width
+            } catch (_: Exception) {
+                0
+            }
         }
-    }
 
-    override fun getIntrinsicHeight(): Int {
-        return if (noMeasure) {
-            -1
-        } else try {
-            frameSeqDecoder.getBounds().height()
-        } catch (exception: Exception) {
+    override fun getIntrinsicHeight(): Int = if (noMeasure) {
+        -1
+    } else {
+        try {
+            frameSeqDecoder.getViewport().height
+        } catch (_: Exception) {
             0
         }
     }
@@ -248,26 +235,11 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         animationCallbacks.add(animationCallback)
     }
 
-    override fun unregisterAnimationCallback(animationCallback: Animatable2Compat.AnimationCallback): Boolean {
-        return animationCallbacks.remove(animationCallback)
-    }
+    override fun unregisterAnimationCallback(
+        animationCallback: Animatable2Compat.AnimationCallback
+    ): Boolean = animationCallbacks.remove(animationCallback)
 
-    override fun clearAnimationCallbacks() {
-        animationCallbacks.clear()
-    }
-
-    val memorySize: Int
-        get() {
-            var size = frameSeqDecoder.getMemorySize()
-            if (bitmap != null && !bitmap!!.isRecycled) {
-                size += bitmap!!.allocationByteCount
-            }
-            return Math.max(1, size)
-        }
-
-    override fun getCallback(): Callback? {
-        return super.getCallback()
-    }
+    override fun clearAnimationCallbacks() = animationCallbacks.clear()
 
     private fun hookRecordCallbacks() {
         val lost: MutableList<WeakReference<Callback?>> = ArrayList()
@@ -276,14 +248,10 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         val temp: Set<WeakReference<Callback?>> = HashSet(obtainedCallbacks)
         for (ref in temp) {
             val cb = ref.get()
-            if (cb == null) {
-                lost.add(ref)
-            } else {
-                if (cb === callback) {
-                    recorded = true
-                } else {
-                    cb.invalidateDrawable(this)
-                }
+            when {
+                cb == null -> lost.add(ref)
+                cb === callback -> recorded = true
+                else -> cb.invalidateDrawable(this)
             }
         }
         for (ref in lost) {
@@ -307,7 +275,5 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
 
     companion object {
         private val TAG = FrameAnimationDrawable::class.java.simpleName
-        private const val MSG_ANIMATION_START = 1
-        private const val MSG_ANIMATION_END = 2
     }
 }

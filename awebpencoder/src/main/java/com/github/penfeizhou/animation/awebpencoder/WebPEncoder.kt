@@ -46,7 +46,7 @@ class WebPEncoder {
     private var width = 0
     private var height = 0
     private fun loadDecoder(decoder: FrameSeqDecoder2) {
-        decoder.getBounds()
+        decoder.getViewport()
         val frameCount = decoder.frameCount
         val delay: MutableList<Int> = ArrayList()
         for (i in 0 until frameCount) {
