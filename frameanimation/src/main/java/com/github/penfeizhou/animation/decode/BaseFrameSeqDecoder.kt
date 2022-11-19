@@ -67,8 +67,8 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             }
         }
 
-    @Volatile
-    protected var viewport: Rect? = null
+    protected val viewport: Rect?
+        get() = imageInfo?.viewport
 
     @Volatile
     private var imageInfo: ImageInfo? = null
@@ -87,19 +87,19 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         }
 
     fun getBounds(): Rect {
-        if (viewport == null) {
+        if (imageInfo == null) {
             if (state == State.FINISHING) {
                 Log.e(TAG, "$debugInfo in finishing. Do not interrupt")
             }
             val thread = Thread.currentThread()
             ensureWorkerExecute {
                 try {
-                    if (viewport == null) {
+                    if (imageInfo == null) {
                         initCanvasBounds()
                     }
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    viewport = RECT_EMPTY
+                    imageInfo = ImageInfo.EMPTY
                 } finally {
                     LockSupport.unpark(thread)
                 }
@@ -107,7 +107,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             LockSupport.park(thread)
         }
 
-        return viewport ?: RECT_EMPTY
+        return imageInfo?.viewport ?: RECT_EMPTY
     }
 
     /**
@@ -160,7 +160,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     }
 
     fun start() {
-        if (viewport == RECT_EMPTY) {
+        if (imageInfo == ImageInfo.EMPTY) {
             return
         }
 
@@ -217,7 +217,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     }
 
     fun stop() {
-        if (viewport == RECT_EMPTY) {
+        if (imageInfo == ImageInfo.EMPTY) {
             return
         }
 
@@ -292,7 +292,6 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     @Throws(IOException::class)
     internal fun initCanvasBounds() {
         val imageInfo = read(bitmapReaderManager.getReader())
-        viewport = imageInfo.viewport
         this.imageInfo = imageInfo
         val capacityBytes = (imageInfo.area / (sampleSize * sampleSize) + 1) * 4
         frameBuffer = ByteBuffer.allocate(capacityBytes)
