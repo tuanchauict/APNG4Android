@@ -97,22 +97,16 @@ abstract class FrameAnimationDrawable(
     /**
      * @param loopLimit <=0为无限播放,>0为实际播放次数
      */
-    fun setLoopLimit(loopLimit: Int) {
-        frameSeqDecoder.setLoopLimit(loopLimit)
-    }
+    fun setLoopLimit(loopLimit: Int) = frameSeqDecoder.setLoopLimit(loopLimit)
 
     fun reset() {
         unrecycledBitmap?.eraseColor(Color.TRANSPARENT)
         frameSeqDecoder.reset()
     }
 
-    fun pause() {
-        frameSeqDecoder.pause()
-    }
+    fun pause() = frameSeqDecoder.pause()
 
-    fun resume() {
-        frameSeqDecoder.resume()
-    }
+    fun resume() = frameSeqDecoder.resume()
 
     override fun start() {
         if (frameSeqDecoder.isRunning) {
@@ -229,34 +223,25 @@ abstract class FrameAnimationDrawable(
     override fun clearAnimationCallbacks() = animationCallbacks.clear()
 
     private fun hookRecordCallbacks() {
-        val lost: MutableList<WeakReference<Callback?>> = ArrayList()
         val callback = callback
-        var recorded = false
-        val temp: Set<WeakReference<Callback?>> = HashSet(obtainedCallbacks)
-        for (ref in temp) {
-            val cb = ref.get()
-            when {
-                cb == null -> lost.add(ref)
-                cb === callback -> recorded = true
-                else -> cb.invalidateDrawable(this)
-            }
+
+        obtainedCallbacks.removeAll { it.get() == null }
+        for (ref in obtainedCallbacks.toSet()) {
+            ref.get()
+                ?.takeIf { it != callback }
+                ?.invalidateDrawable(this)
         }
-        for (ref in lost) {
-            obtainedCallbacks.remove(ref)
-        }
-        if (!recorded) {
+
+        if (!obtainedCallbacks.any { it.get() == callback }) {
             obtainedCallbacks.add(WeakReference(callback))
         }
     }
 
     override fun invalidateSelf() {
         super.invalidateSelf()
-        val temp: Set<WeakReference<Callback?>> = HashSet(obtainedCallbacks)
-        for (ref in temp) {
-            val callback = ref.get()
-            if (callback != null && callback !== getCallback()) {
-                callback.invalidateDrawable(this)
-            }
+        for (ref in obtainedCallbacks) {
+            val callback = ref.get()?.takeIf { it != callback }
+            callback?.invalidateDrawable(this)
         }
     }
 
