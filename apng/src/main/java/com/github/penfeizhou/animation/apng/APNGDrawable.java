@@ -16,7 +16,7 @@ import com.github.penfeizhou.animation.loader.ResourceStreamLoader;
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-public class APNGDrawable extends FrameAnimationDrawable<APNGDecoder> {
+public class APNGDrawable extends FrameAnimationDrawable {
     public APNGDrawable(Loader provider) {
         super(provider);
     }

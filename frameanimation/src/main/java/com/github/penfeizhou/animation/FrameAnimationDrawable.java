@@ -31,11 +31,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
+public abstract class FrameAnimationDrawable
         extends Drawable implements Animatable2Compat, RenderListener {
     private static final String TAG = FrameAnimationDrawable.class.getSimpleName();
     private final Paint paint = new Paint();
-    private final Decoder frameSeqDecoder;
+    private final FrameSeqDecoder2 frameSeqDecoder;
     private final DrawFilter drawFilter = new PaintFlagsDrawFilter(0, Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Matrix matrix = new Matrix();
     private final Set<AnimationCallback> animationCallbacks = new HashSet<>();
@@ -63,19 +63,14 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
             }
         }
     };
-    private final Runnable invalidateRunnable = new Runnable() {
-        @Override
-        public void run() {
-            invalidateSelf();
-        }
-    };
+    private final Runnable invalidateRunnable = this::invalidateSelf;
     private boolean autoPlay = true;
 
     private final Set<WeakReference<Callback>> obtainedCallbacks = new HashSet<>();
 
     private boolean noMeasure = false;
 
-    public FrameAnimationDrawable(Decoder frameSeqDecoder) {
+    public FrameAnimationDrawable(FrameSeqDecoder2 frameSeqDecoder) {
         paint.setAntiAlias(true);
         this.frameSeqDecoder = frameSeqDecoder;
     }
@@ -93,7 +88,7 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
         this.noMeasure = noMeasure;
     }
 
-    protected abstract Decoder createFrameSeqDecoder(Loader streamLoader, RenderListener listener);
+    protected abstract FrameSeqDecoder2 createFrameSeqDecoder(Loader streamLoader, RenderListener listener);
 
     /**
      * @param loopLimit <=0为无限播放,>0为实际播放次数
@@ -349,7 +344,7 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
         }
     }
 
-    public Decoder getFrameSeqDecoder() {
+    public FrameSeqDecoder2 getFrameSeqDecoder() {
         return frameSeqDecoder;
     }
 }

@@ -16,7 +16,7 @@ import com.github.penfeizhou.animation.webp.decode.WebPDecoder;
  * @Author: pengfei.zhou
  * @CreateDate: 2019/3/27
  */
-public class WebPDrawable extends FrameAnimationDrawable<WebPDecoder> {
+public class WebPDrawable extends FrameAnimationDrawable {
 
     public WebPDrawable(Loader provider) {
         super(provider);

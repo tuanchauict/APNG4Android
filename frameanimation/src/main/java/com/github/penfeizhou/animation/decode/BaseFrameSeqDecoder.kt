@@ -149,6 +149,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             frameIndex = 0
             playCount += 1
         }
+
         val frame = getFrame(frameIndex) ?: return 0
         val frameBuffer = frameBuffer ?: return 0
         val imageInfo = imageInfo ?: return 0
