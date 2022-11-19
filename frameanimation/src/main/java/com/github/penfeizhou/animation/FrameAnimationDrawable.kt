@@ -141,6 +141,7 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
             1.0f * bounds.height() * sampleSize / viewport.height
         )
         if (isSampleSizeChanged) {
+            bitmap?.recycle()
             bitmap = Bitmap.createBitmap(
                 viewport.width / sampleSize,
                 viewport.height / sampleSize,
