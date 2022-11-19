@@ -45,6 +45,8 @@ class GifDecoder(
         var graphicControlExtension: GraphicControlExtension? = null
         var bgColorIndex = -1
         var loopCount = 0
+        val frames = mutableListOf<Frame>()
+
         for (block in blocks) {
             if (block is LogicalScreenDescriptor) {
                 canvasWidth = block.screenWidth
@@ -69,7 +71,7 @@ class GifDecoder(
             val abgr = globalColorTable.colorTable[bgColorIndex]
             bgColor = Color.rgb(abgr and 0xff, abgr shr 8 and 0xff, abgr shr 16 and 0xff)
         }
-        return ImageInfo(loopCount, Size(canvasWidth, canvasHeight))
+        return ImageInfo(loopCount, Size(canvasWidth, canvasHeight), frames)
     }
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1

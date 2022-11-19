@@ -54,7 +54,7 @@ class APNGDecoder(
         val isAnimated = result.actlChunk != null
         val loopCount = result.actlChunk?.num_plays ?: 1
         val viewport = Size(result.ihdrChunk.width,result.ihdrChunk.height)
-
+        val frames = mutableListOf<Frame>()
         when {
             isAnimated ->
                 result.frameDatas.mapIndexedTo(frames) { index, frameData ->
@@ -75,7 +75,7 @@ class APNGDecoder(
 
         val bufferSizeBytes = (viewport.area / (sampleSize * sampleSize) + 1) * 4
         snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
-        return ImageInfo(loopCount, viewport)
+        return ImageInfo(loopCount, viewport, frames)
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {

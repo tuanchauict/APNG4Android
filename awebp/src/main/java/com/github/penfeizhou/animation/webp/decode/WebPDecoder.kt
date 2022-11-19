@@ -49,6 +49,7 @@ class WebPDecoder(
         var anim = false
         var vp8x = false
         var loopCount = 0
+        val frames = mutableListOf<Frame>()
         for (chunk in chunks) {
             when (chunk) {
                 is VP8XChunk -> {
@@ -80,7 +81,7 @@ class WebPDecoder(
         if (!alpha) {
             mTransparentFillPaint.color = backgroundColor
         }
-        return ImageInfo(loopCount, Size(canvasWidth, canvasHeight))
+        return ImageInfo(loopCount, Size(canvasWidth, canvasHeight), frames)
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {

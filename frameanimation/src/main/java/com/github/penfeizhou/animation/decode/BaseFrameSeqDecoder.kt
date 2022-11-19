@@ -23,7 +23,8 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     val currentFrameBuffer: ByteBuffer?
         get() = frameBuffer
 
-    protected val frames: MutableList<Frame> = mutableListOf()
+    protected val frames: List<Frame>
+        get() = imageInfo?.frames.orEmpty()
 
     val frameCount: Int
         get() = frames.size
@@ -237,7 +238,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     @WorkerThread
     internal fun innerStop() {
         workerHandler.removeCallbacks(renderTask)
-        frames.clear()
+        imageInfo = null
         bitmapPool.clear()
         frameBuffer = null
         cachedCanvas.clear()
