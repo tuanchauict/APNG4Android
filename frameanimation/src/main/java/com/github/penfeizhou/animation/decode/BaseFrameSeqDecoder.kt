@@ -51,7 +51,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     private var loopLimit: Int? = null
 
     private val numPlays: Int
-        get() = loopLimit ?: getLoopCount()
+        get() = loopLimit ?: imageInfo?.loopCount ?: 0
 
     /**
      * If played all the needed
@@ -67,9 +67,11 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             }
         }
 
-    @JvmField
     @Volatile
     protected var viewport: Rect? = null
+
+    @Volatile
+    private var imageInfo: ImageInfo? = null
 
     var sampleSize = 1
         internal set
@@ -289,14 +291,15 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     @WorkerThread
     @Throws(IOException::class)
     internal fun initCanvasBounds() {
-        val rect = read(bitmapReaderManager.getReader())
-        viewport = rect
-        val capacityBytes = (rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4
+        val imageInfo = read(bitmapReaderManager.getReader())
+        viewport = imageInfo.viewport
+        this.imageInfo = imageInfo
+        val capacityBytes = (imageInfo.area / (sampleSize * sampleSize) + 1) * 4
         frameBuffer = ByteBuffer.allocate(capacityBytes)
     }
 
     @Throws(IOException::class)
-    protected abstract fun read(reader: FilterReader): Rect
+    protected abstract fun read(reader: FilterReader): ImageInfo
 
     fun getMemorySize(): Int {
         val frameBufferSizeBytes = frameBuffer?.capacity() ?: 0
@@ -306,11 +309,6 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     fun setLoopLimit(limit: Int) {
         loopLimit = limit
     }
-
-    /**
-     * Gets the Loop Count defined in file
-     */
-    protected abstract fun getLoopCount(): Int
 
     internal fun ensureWorkerExecute(block: () -> Unit) {
         if (Looper.myLooper() == workerHandler.looper) {

@@ -6,9 +6,9 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
+import com.github.penfeizhou.animation.decode.ImageInfo
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -34,24 +34,20 @@ class WebPDecoder(
         value.isAntiAlias = true
         value
     }
-    private var loopCount = 0
     private var canvasWidth = 0
     private var canvasHeight = 0
     private var alpha = false
     private var backgroundColor = 0
     private val writer: Writer by lazy { ByteBufferWriter() }
 
-    override fun getLoopCount(): Int {
-        return loopCount
-    }
-
     override fun release() {}
 
     @Throws(IOException::class)
-    override fun read(reader: FilterReader): Rect {
+    override fun read(reader: FilterReader): ImageInfo {
         val chunks = WebPParser.parse(reader)
         var anim = false
         var vp8x = false
+        var loopCount = 0
         for (chunk in chunks) {
             when (chunk) {
                 is VP8XChunk -> {
@@ -83,7 +79,7 @@ class WebPDecoder(
         if (!alpha) {
             mTransparentFillPaint.color = backgroundColor
         }
-        return Rect(0, 0, canvasWidth, canvasHeight)
+        return ImageInfo(loopCount, canvasWidth, canvasHeight)
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {

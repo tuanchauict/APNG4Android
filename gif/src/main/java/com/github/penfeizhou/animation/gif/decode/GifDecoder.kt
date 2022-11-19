@@ -3,9 +3,9 @@ package com.github.penfeizhou.animation.gif.decode
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
-import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
+import com.github.penfeizhou.animation.decode.ImageInfo
 import com.github.penfeizhou.animation.gif.io.GifWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
@@ -24,7 +24,6 @@ class GifDecoder(
     private val paint = Paint().apply { isAntiAlias = true }
     private var bgColor = Color.TRANSPARENT
     private val snapShot = SnapShot()
-    private var mLoopCount = 0
 
     private class SnapShot {
         var byteBuffer: ByteBuffer? = null
@@ -32,22 +31,19 @@ class GifDecoder(
 
     private val writer: GifWriter by lazy { GifWriter() }
 
-    override fun getLoopCount(): Int {
-        return mLoopCount
-    }
-
     override fun release() {
         snapShot.byteBuffer = null
     }
 
     @Throws(IOException::class)
-    override fun read(reader: FilterReader): Rect {
+    override fun read(reader: FilterReader): ImageInfo {
         val blocks = GifParser.parse(reader)
         var canvasWidth = 0
         var canvasHeight = 0
         var globalColorTable: ColorTable? = null
         var graphicControlExtension: GraphicControlExtension? = null
         var bgColorIndex = -1
+        var loopCount = 0
         for (block in blocks) {
             if (block is LogicalScreenDescriptor) {
                 canvasWidth = block.screenWidth
@@ -63,7 +59,7 @@ class GifDecoder(
                 val gifFrame = GifFrame(reader, globalColorTable, graphicControlExtension, block)
                 frames.add(gifFrame)
             } else if (block is ApplicationExtension && "NETSCAPE2.0" == block.identifier) {
-                mLoopCount = block.loopCount
+                loopCount = block.loopCount
             }
         }
         snapShot.byteBuffer =
@@ -72,7 +68,7 @@ class GifDecoder(
             val abgr = globalColorTable.colorTable[bgColorIndex]
             bgColor = Color.rgb(abgr and 0xff, abgr shr 8 and 0xff, abgr shr 16 and 0xff)
         }
-        return Rect(0, 0, canvasWidth, canvasHeight)
+        return ImageInfo(loopCount, canvasWidth, canvasHeight)
     }
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1

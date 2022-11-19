@@ -8,6 +8,7 @@ import android.graphics.PorterDuff
 import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
+import com.github.penfeizhou.animation.decode.ImageInfo
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -28,7 +29,6 @@ class APNGDecoder(
     loader: Loader,
     renderListener: RenderListener?
 ) : FrameSeqDecoder2(loader, renderListener) {
-    private var mLoopCount = 0
     private val paint = Paint().apply { isAntiAlias = true }
 
     private class SnapShot {
@@ -41,22 +41,21 @@ class APNGDecoder(
 
     private val apngWriter: Writer by lazy { ByteBufferWriter(ByteOrder.BIG_ENDIAN) }
 
-    override fun getLoopCount(): Int {
-        return mLoopCount
-    }
-
     override fun release() {
         snapShot.byteBuffer = null
     }
 
     @Throws(IOException::class)
-    override fun read(reader: FilterReader): Rect {
+    override fun read(reader: FilterReader): ImageInfo {
         val result = APNGParser.parse(reader)
 
         val isAnimated = result.actlChunk != null
-        mLoopCount = result.actlChunk?.num_plays ?: 1
-        val canvasWidth = result.ihdrChunk.width
-        val canvasHeight = result.ihdrChunk.height
+
+        val imageInfo = ImageInfo(
+            loopCount = result.actlChunk?.num_plays ?: 1,
+            viewportWidth = result.ihdrChunk.width,
+            viewportHeightPx = result.ihdrChunk.height
+        )
 
         when {
             isAnimated ->
@@ -73,12 +72,12 @@ class APNGDecoder(
 
             result.hasIDATChunk ->
                 // If it is a non-APNG image, only PNG will be decoded
-                frames += StillFrame(reader, canvasWidth, canvasHeight)
+                frames += StillFrame(reader, imageInfo.viewportWidthPx, imageInfo.viewportHeightPx)
         }
 
-        val bufferSizeBytes = (canvasWidth * canvasHeight / (sampleSize * sampleSize) + 1) * 4
+        val bufferSizeBytes = (imageInfo.area / (sampleSize * sampleSize) + 1) * 4
         snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
-        return Rect(0, 0, canvasWidth, canvasHeight)
+        return imageInfo
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
