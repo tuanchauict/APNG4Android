@@ -192,25 +192,10 @@ abstract class FrameAnimationDrawable(
     }
 
     override fun getIntrinsicWidth(): Int =
-        if (noMeasure) {
-            -1
-        } else {
-            try {
-                frameSeqDecoder.getViewport().width
-            } catch (_: Exception) {
-                0
-            }
-        }
+        if (noMeasure) -1 else frameSeqDecoder.getViewport().width
 
-    override fun getIntrinsicHeight(): Int = if (noMeasure) {
-        -1
-    } else {
-        try {
-            frameSeqDecoder.getViewport().height
-        } catch (_: Exception) {
-            0
-        }
-    }
+    override fun getIntrinsicHeight(): Int =
+        if (noMeasure) -1 else frameSeqDecoder.getViewport().height
 
     override fun registerAnimationCallback(animationCallback: Animatable2Compat.AnimationCallback) {
         animationCallbacks.add(animationCallback)
