@@ -104,8 +104,9 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             }
             LockSupport.park(thread)
         }
+        val imageInfo = imageInfo ?: ImageInfo.EMPTY
 
-        return imageInfo?.viewport ?: RECT_EMPTY
+        return Rect(0, 0, imageInfo.viewport.width, imageInfo.viewport.height)
     }
 
     /**
@@ -153,7 +154,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         }
         val frame = getFrame(frameIndex) ?: return 0
         val frameBuffer = frameBuffer ?: return 0
-        val viewport = imageInfo?.size ?: return 0
+        val viewport = imageInfo?.viewport ?: return 0
         renderFrame(frame, frameBuffer, viewport)
         return frame.frameDuration.toLong()
     }
@@ -377,7 +378,6 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
 
     companion object {
         const val DEBUG = false
-        val RECT_EMPTY = Rect()
 
         const val TAG = "FrameDecoder"
     }

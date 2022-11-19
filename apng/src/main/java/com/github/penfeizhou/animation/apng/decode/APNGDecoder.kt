@@ -54,7 +54,7 @@ class APNGDecoder(
 
         val imageInfo = ImageInfo(
             loopCount = result.actlChunk?.num_plays ?: 1,
-            viewportWidth = result.ihdrChunk.width,
+            viewportWidthPx = result.ihdrChunk.width,
             viewportHeightPx = result.ihdrChunk.height
         )
 
@@ -73,7 +73,7 @@ class APNGDecoder(
 
             result.hasIDATChunk ->
                 // If it is a non-APNG image, only PNG will be decoded
-                frames += StillFrame(reader, imageInfo.viewportWidthPx, imageInfo.viewportHeightPx)
+                frames += StillFrame(reader, imageInfo.viewport.width, imageInfo.viewport.height)
         }
 
         val bufferSizeBytes = (imageInfo.area / (sampleSize * sampleSize) + 1) * 4
