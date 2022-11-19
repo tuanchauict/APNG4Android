@@ -18,6 +18,9 @@ import java.util.concurrent.locks.LockSupport
 
 abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener: RenderListener?) {
     private var frameBuffer: ByteBuffer? = null
+    // TODO: Remove this
+    val currentFrameBuffer: ByteBuffer?
+        get() = frameBuffer
 
     protected val frames: MutableList<Frame> = mutableListOf()
 
@@ -66,7 +69,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
 
     @JvmField
     @Volatile
-    protected var fullRect: Rect? = null
+    protected var viewport: Rect? = null
 
     var sampleSize = 1
         internal set
@@ -82,19 +85,19 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         }
 
     fun getBounds(): Rect {
-        if (fullRect == null) {
+        if (viewport == null) {
             if (state == State.FINISHING) {
                 Log.e(TAG, "$debugInfo in finishing. Do not interrupt")
             }
             val thread = Thread.currentThread()
             ensureWorkerExecute {
                 try {
-                    if (fullRect == null) {
+                    if (viewport == null) {
                         initCanvasBounds()
                     }
                 } catch (e: IOException) {
                     e.printStackTrace()
-                    fullRect = RECT_EMPTY
+                    viewport = RECT_EMPTY
                 } finally {
                     LockSupport.unpark(thread)
                 }
@@ -102,7 +105,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             LockSupport.park(thread)
         }
 
-        return fullRect ?: RECT_EMPTY
+        return viewport ?: RECT_EMPTY
     }
 
     /**
@@ -155,7 +158,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     }
 
     fun start() {
-        if (fullRect == RECT_EMPTY) {
+        if (viewport == RECT_EMPTY) {
             return
         }
 
@@ -212,7 +215,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     }
 
     fun stop() {
-        if (fullRect == RECT_EMPTY) {
+        if (viewport == RECT_EMPTY) {
             return
         }
 
@@ -287,7 +290,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     @Throws(IOException::class)
     internal fun initCanvasBounds() {
         val rect = read(bitmapReaderManager.getReader())
-        fullRect = rect
+        viewport = rect
         val capacityBytes = (rect.width() * rect.height() / (sampleSize * sampleSize) + 1) * 4
         frameBuffer = ByteBuffer.allocate(capacityBytes)
     }
@@ -311,9 +314,13 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
 
     internal fun ensureWorkerExecute(block: () -> Unit) {
         if (Looper.myLooper() == workerHandler.looper) {
+            println("#1: Thread ${Thread.currentThread().name}")
             block()
         } else {
-            workerHandler.post(block)
+            workerHandler.post {
+                println("#2: Thread ${Thread.currentThread().name}")
+                block()
+            }
         }
     }
 

@@ -82,12 +82,12 @@ class APNGDecoder(
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
-        val fullRect = fullRect ?: return
+        val viewport = viewport ?: return
         try {
             val bitmap =
                 obtainBitmap(
-                    width = fullRect.width() / sampleSize,
-                    height = fullRect.height() / sampleSize
+                    width = viewport.width() / sampleSize,
+                    height = viewport.height() / sampleSize
                 ) ?: return
             val canvas = getCanvas(bitmap)
 

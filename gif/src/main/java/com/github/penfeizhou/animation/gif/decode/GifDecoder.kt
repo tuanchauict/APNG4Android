@@ -80,7 +80,7 @@ class GifDecoder(
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
         val gifFrame = frame as GifFrame
         val bitmap =
-            obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)
+            obtainBitmap(viewport!!.width() / sampleSize, viewport!!.height() / sampleSize)
                 ?: return
         val canvas = getCanvas(bitmap)
 
@@ -109,8 +109,8 @@ class GifDecoder(
                     snapShot.byteBuffer!!.rewind()
                     canvas.drawColor(bgColor, PorterDuff.Mode.CLEAR)
                     val preBitmap = obtainBitmap(
-                        fullRect!!.width() / sampleSize,
-                        fullRect!!.height() / sampleSize
+                        viewport!!.width() / sampleSize,
+                        viewport!!.height() / sampleSize
                     )
                     preBitmap!!.copyPixelsFromBuffer(snapShot.byteBuffer)
                     canvas.drawBitmap(preBitmap, 0f, 0f, paint)

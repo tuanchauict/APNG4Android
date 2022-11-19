@@ -87,13 +87,13 @@ class WebPDecoder(
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
-        if (fullRect == null) {
+        if (viewport == null) {
             return
         }
-        if (fullRect!!.width() <= 0 || fullRect!!.height() <= 0) {
+        if (viewport!!.width() <= 0 || viewport!!.height() <= 0) {
             return
         }
-        val bitmap = obtainBitmap(fullRect!!.width() / sampleSize, fullRect!!.height() / sampleSize)
+        val bitmap = obtainBitmap(viewport!!.width() / sampleSize, viewport!!.height() / sampleSize)
             ?: return
         val canvas = getCanvas(bitmap)
         // 从缓存中恢复当前帧

@@ -69,7 +69,7 @@ abstract class FrameSeqDecoder2(
                 break
             }
         }
-        val nonNullFrameBuffer = frameBuffer ?: return null
+        val nonNullFrameBuffer = currentFrameBuffer ?: return null
         val bounds = getBounds()
         val bitmap = Bitmap.createBitmap(
             bounds.width() / sampleSize,
