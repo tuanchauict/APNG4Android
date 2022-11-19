@@ -3,7 +3,7 @@ package com.github.penfeizhou.animation.gif;
 import android.content.Context;
 
 import com.github.penfeizhou.animation.FrameAnimationDrawable;
-import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.RenderListener;
 import com.github.penfeizhou.animation.gif.decode.GifDecoder;
 import com.github.penfeizhou.animation.loader.AssetStreamLoader;
 import com.github.penfeizhou.animation.loader.FileLoader;
@@ -25,7 +25,7 @@ public class GifDrawable extends FrameAnimationDrawable<GifDecoder> {
     }
 
     @Override
-    protected GifDecoder createFrameSeqDecoder(Loader loader, BaseFrameSeqDecoder.RenderListener listener) {
+    protected GifDecoder createFrameSeqDecoder(Loader loader, RenderListener listener) {
         return new GifDecoder(loader, listener);
     }
 

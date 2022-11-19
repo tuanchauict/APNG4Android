@@ -21,6 +21,7 @@ import androidx.vectordrawable.graphics.drawable.Animatable2Compat;
 
 import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder;
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2;
+import com.github.penfeizhou.animation.decode.RenderListener;
 import com.github.penfeizhou.animation.loader.Loader;
 
 import java.lang.ref.WeakReference;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
-        extends Drawable implements Animatable2Compat, BaseFrameSeqDecoder.RenderListener {
+        extends Drawable implements Animatable2Compat, RenderListener {
     private static final String TAG = FrameAnimationDrawable.class.getSimpleName();
     private final Paint paint = new Paint();
     private final Decoder frameSeqDecoder;
@@ -92,7 +93,7 @@ public abstract class FrameAnimationDrawable<Decoder extends FrameSeqDecoder2>
         this.noMeasure = noMeasure;
     }
 
-    protected abstract Decoder createFrameSeqDecoder(Loader streamLoader, BaseFrameSeqDecoder.RenderListener listener);
+    protected abstract Decoder createFrameSeqDecoder(Loader streamLoader, RenderListener listener);
 
     /**
      * @param loopLimit <=0为无限播放,>0为实际播放次数

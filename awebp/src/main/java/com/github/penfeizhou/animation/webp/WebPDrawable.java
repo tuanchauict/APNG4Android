@@ -4,7 +4,7 @@ package com.github.penfeizhou.animation.webp;
 import android.content.Context;
 
 import com.github.penfeizhou.animation.FrameAnimationDrawable;
-import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.RenderListener;
 import com.github.penfeizhou.animation.loader.AssetStreamLoader;
 import com.github.penfeizhou.animation.loader.FileLoader;
 import com.github.penfeizhou.animation.loader.Loader;
@@ -27,7 +27,7 @@ public class WebPDrawable extends FrameAnimationDrawable<WebPDecoder> {
     }
 
     @Override
-    protected WebPDecoder createFrameSeqDecoder(Loader streamLoader, BaseFrameSeqDecoder.RenderListener listener) {
+    protected WebPDecoder createFrameSeqDecoder(Loader streamLoader, RenderListener listener) {
         return new WebPDecoder(streamLoader, listener);
     }
 

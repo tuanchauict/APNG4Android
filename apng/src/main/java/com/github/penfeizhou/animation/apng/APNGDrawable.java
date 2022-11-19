@@ -5,7 +5,7 @@ import android.content.Context;
 
 import com.github.penfeizhou.animation.FrameAnimationDrawable;
 import com.github.penfeizhou.animation.apng.decode.APNGDecoder;
-import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder;
+import com.github.penfeizhou.animation.decode.RenderListener;
 import com.github.penfeizhou.animation.loader.AssetStreamLoader;
 import com.github.penfeizhou.animation.loader.FileLoader;
 import com.github.penfeizhou.animation.loader.Loader;
@@ -26,7 +26,7 @@ public class APNGDrawable extends FrameAnimationDrawable<APNGDecoder> {
     }
 
     @Override
-    protected APNGDecoder createFrameSeqDecoder(Loader streamLoader, BaseFrameSeqDecoder.RenderListener listener) {
+    protected APNGDecoder createFrameSeqDecoder(Loader streamLoader, RenderListener listener) {
         return new APNGDecoder(streamLoader, listener);
     }
 

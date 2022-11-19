@@ -54,7 +54,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     private var finished: Boolean = false
 
     @Volatile
-    protected var state = State.IDLE
+    internal var state = State.IDLE
         set(value) {
             field = value
             if (DEBUG) {
@@ -349,28 +349,8 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         }
     }
 
-    protected enum class State {
+    internal enum class State {
         IDLE, RUNNING, INITIALIZING, FINISHING
-    }
-
-    /**
-     * Rendering callbacks for decoders
-     */
-    interface RenderListener {
-        /**
-         * Playback starts
-         */
-        fun onStart()
-
-        /**
-         * Frame Playback
-         */
-        fun onRender(byteBuffer: ByteBuffer)
-
-        /**
-         * End of Playback
-         */
-        fun onEnd()
     }
 
     companion object {
