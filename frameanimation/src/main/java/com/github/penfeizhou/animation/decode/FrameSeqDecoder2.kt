@@ -57,7 +57,7 @@ abstract class FrameSeqDecoder2(
         state = State.RUNNING
         paused.set(false)
 
-        if (frames.isEmpty()) {
+        if (frameCount == 0) {
             initCanvasBounds()
         }
 

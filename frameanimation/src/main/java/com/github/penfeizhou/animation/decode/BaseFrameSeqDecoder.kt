@@ -23,12 +23,6 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     val currentFrameBuffer: ByteBuffer?
         get() = frameBuffer
 
-    protected val frames: List<Frame>
-        get() = imageInfo?.frames.orEmpty()
-
-    val frameCount: Int
-        get() = frames.size
-
     protected var frameIndex = -1
 
     internal val paused = AtomicBoolean(true)
@@ -71,6 +65,12 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
 
     @Volatile
     private var imageInfo: ImageInfo? = null
+
+    protected val frames: List<Frame>
+        get() = imageInfo?.frames.orEmpty()
+
+    val frameCount: Int
+        get() = imageInfo?.frames?.size ?: 0
 
     var sampleSize = 1
         internal set
@@ -125,7 +125,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         cachedCanvas.getOrPut(bitmap) { Canvas(bitmap) }
 
     internal fun canStep(): Boolean {
-        if (!isRunning || frames.isEmpty()) {
+        if (!isRunning || frameCount == 0) {
             return false
         }
         val numPlays = numPlays
@@ -135,7 +135,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
 
         if (playCount < numPlays - 1) {
             return true
-        } else if (playCount == numPlays - 1 && frameIndex < frames.lastIndex) {
+        } else if (playCount == numPlays - 1 && frameIndex < frameCount - 1) {
             return true
         }
         finished = true
@@ -149,7 +149,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     @WorkerThread
     protected fun step(): Long {
         frameIndex += 1
-        if (frameIndex >= frames.size) {
+        if (frameIndex >= frameCount) {
             frameIndex = 0
             playCount += 1
         }
@@ -183,7 +183,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         paused.set(false)
         val startTimeMillis = System.currentTimeMillis()
 
-        if (frames.isEmpty()) {
+        if (frameCount == 0) {
             try {
                 initCanvasBounds()
             } catch (e: IOException) {
@@ -286,7 +286,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
     @WorkerThread
     protected abstract fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size)
 
-    fun getFrame(index: Int): Frame? = frames.getOrNull(index)
+    fun getFrame(index: Int): Frame? = imageInfo?.frames?.getOrNull(index)
 
     // TODO: Rename this method. Init canvas bounds is not appropriate anymore.
     @WorkerThread
