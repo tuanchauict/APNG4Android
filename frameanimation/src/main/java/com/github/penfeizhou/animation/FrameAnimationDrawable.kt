@@ -172,6 +172,8 @@ abstract class FrameAnimationDrawable(
         paint.colorFilter = colorFilter
     }
 
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Deprecated("Deprecated in Java")
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 
     override fun setVisible(visible: Boolean, restart: Boolean): Boolean {
@@ -180,12 +182,9 @@ abstract class FrameAnimationDrawable(
             if (BaseFrameSeqDecoder.DEBUG) {
                 Log.d(TAG, "$this,visible:$visible,restart:$restart")
             }
-            if (visible) {
-                if (!isRunning) {
-                    innerStart()
-                }
-            } else if (isRunning) {
-                innerStop()
+            when {
+                visible && !isRunning -> innerStart()
+                !visible && isRunning -> innerStop()
             }
         }
         return super.setVisible(visible, restart)
