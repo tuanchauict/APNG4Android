@@ -69,7 +69,7 @@ class GifDecoder(
             val abgr = globalColorTable.colorTable[bgColorIndex]
             bgColor = Color.rgb(abgr and 0xff, abgr shr 8 and 0xff, abgr shr 16 and 0xff)
         }
-        return ImageInfo(loopCount, canvasWidth, canvasHeight)
+        return ImageInfo(loopCount, Size(canvasWidth, canvasHeight))
     }
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1

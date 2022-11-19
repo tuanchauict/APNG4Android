@@ -10,6 +10,7 @@ import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
+import com.github.penfeizhou.animation.decode.area
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -51,12 +52,8 @@ class APNGDecoder(
         val result = APNGParser.parse(reader)
 
         val isAnimated = result.actlChunk != null
-
-        val imageInfo = ImageInfo(
-            loopCount = result.actlChunk?.num_plays ?: 1,
-            viewportWidthPx = result.ihdrChunk.width,
-            viewportHeightPx = result.ihdrChunk.height
-        )
+        val loopCount = result.actlChunk?.num_plays ?: 1
+        val viewport = Size(result.ihdrChunk.width,result.ihdrChunk.height)
 
         when {
             isAnimated ->
@@ -73,12 +70,12 @@ class APNGDecoder(
 
             result.hasIDATChunk ->
                 // If it is a non-APNG image, only PNG will be decoded
-                frames += StillFrame(reader, imageInfo.viewport.width, imageInfo.viewport.height)
+                frames += StillFrame(reader, viewport.width, viewport.height)
         }
 
-        val bufferSizeBytes = (imageInfo.area / (sampleSize * sampleSize) + 1) * 4
+        val bufferSizeBytes = (viewport.area / (sampleSize * sampleSize) + 1) * 4
         snapShot.byteBuffer = ByteBuffer.allocate(bufferSizeBytes)
-        return imageInfo
+        return ImageInfo(loopCount, viewport)
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {

@@ -80,7 +80,7 @@ class WebPDecoder(
         if (!alpha) {
             mTransparentFillPaint.color = backgroundColor
         }
-        return ImageInfo(loopCount, canvasWidth, canvasHeight)
+        return ImageInfo(loopCount, Size(canvasWidth, canvasHeight))
     }
 
     override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {

@@ -8,12 +8,10 @@ class ImageInfo(
 ) {
     val area: Int = viewport.width * viewport.height
 
-    constructor(loopCount: Int, viewportWidthPx: Int, viewportHeightPx: Int) : this(
-        loopCount,
-        Size(viewportWidthPx, viewportHeightPx)
-    )
-
     companion object {
-        val EMPTY = ImageInfo(loopCount = 0, viewportWidthPx = 0, viewportHeightPx = 0)
+        val EMPTY = ImageInfo(loopCount = 0, Size(0, 0))
     }
 }
+
+val Size.area: Int
+    get() = width * height
