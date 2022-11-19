@@ -142,11 +142,7 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         )
         if (isSampleSizeChanged) {
             bitmap?.recycle()
-            bitmap = Bitmap.createBitmap(
-                viewport.width / sampleSize,
-                viewport.height / sampleSize,
-                Bitmap.Config.ARGB_8888
-            )
+            bitmap = frameSeqDecoder.createBitmap()
         }
     }
 
@@ -178,11 +174,7 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         if (!isRunning) {
             return
         }
-        val bitmap = unrecycledBitmap ?: Bitmap.createBitmap(
-            frameSeqDecoder.getViewport().width / frameSeqDecoder.sampleSize,
-            frameSeqDecoder.getViewport().height / frameSeqDecoder.sampleSize,
-            Bitmap.Config.ARGB_8888
-        )
+        val bitmap = unrecycledBitmap ?: frameSeqDecoder.createBitmap()
         this.bitmap = bitmap
 
         byteBuffer.rewind()
@@ -192,6 +184,15 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         }
         bitmap.copyPixelsFromBuffer(byteBuffer)
         uiHandler.post(invalidateRunnable)
+    }
+
+    private fun FrameSeqDecoder2.createBitmap(): Bitmap {
+        val viewport = getViewport()
+        return Bitmap.createBitmap(
+            viewport.width / sampleSize,
+            viewport.height / sampleSize,
+            Bitmap.Config.ARGB_8888
+        )
     }
 
     override fun setVisible(visible: Boolean, restart: Boolean): Boolean {
