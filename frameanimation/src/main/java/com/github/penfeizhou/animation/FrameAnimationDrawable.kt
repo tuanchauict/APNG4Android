@@ -17,14 +17,15 @@ import androidx.vectordrawable.graphics.drawable.Animatable2Compat
 import com.github.penfeizhou.animation.decode.BaseFrameSeqDecoder
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.RenderListener
-import com.github.penfeizhou.animation.loader.Loader
 import java.lang.ref.WeakReference
 import java.nio.ByteBuffer
 import kotlin.math.max
 
-abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListener {
-    private val paint = Paint().apply { isAntiAlias = true }
+abstract class FrameAnimationDrawable(
     val frameSeqDecoder: FrameSeqDecoder2
+) : Drawable(), Animatable2Compat {
+    private val paint = Paint().apply { isAntiAlias = true }
+
     private val drawFilter: DrawFilter =
         PaintFlagsDrawFilter(0, Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val matrix = Matrix()
@@ -34,7 +35,6 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
     private val unrecycledBitmap: Bitmap?
         get() = bitmap?.takeUnless { it.isRecycled }
 
-    private val uiHandler: Handler = Handler(Looper.getMainLooper())
     private val invalidateRunnable = Runnable { invalidateSelf() }
     private var autoPlay = true
     private val obtainedCallbacks: MutableSet<WeakReference<Callback?>> = HashSet()
@@ -49,12 +49,41 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
             return max(frameSeqDecoder.getMemorySize() + bitmapSize, 1)
         }
 
-    constructor(frameSeqDecoder: FrameSeqDecoder2) {
-        this.frameSeqDecoder = frameSeqDecoder
+    private val renderListener = object : RenderListener {
+        private val uiHandler: Handler = Handler(Looper.getMainLooper())
+        override fun onStart() {
+            for (animationCallback in animationCallbacks.asIterable()) {
+                animationCallback.onAnimationStart(this@FrameAnimationDrawable)
+            }
+        }
+
+        override fun onEnd() {
+            uiHandler.post {
+                for (animationCallback in animationCallbacks.asIterable()) {
+                    animationCallback.onAnimationEnd(this@FrameAnimationDrawable)
+                }
+            }
+        }
+
+        override fun onRender(byteBuffer: ByteBuffer) {
+            if (!isRunning) {
+                return
+            }
+            val bitmap = unrecycledBitmap ?: frameSeqDecoder.createBitmap()
+            this@FrameAnimationDrawable.bitmap = bitmap
+
+            byteBuffer.rewind()
+            if (byteBuffer.remaining() < bitmap.byteCount) {
+                Log.e(TAG, "onRender:Buffer not large enough for pixels")
+                return
+            }
+            bitmap.copyPixelsFromBuffer(byteBuffer)
+            uiHandler.post(invalidateRunnable)
+        }
     }
 
-    constructor(provider: Loader?) {
-        frameSeqDecoder = createFrameSeqDecoder(provider, this)
+    init {
+        frameSeqDecoder.addRenderListener(renderListener)
     }
 
     fun setAutoPlay(autoPlay: Boolean) {
@@ -64,11 +93,6 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
     fun setNoMeasure(noMeasure: Boolean) {
         this.noMeasure = noMeasure
     }
-
-    protected abstract fun createFrameSeqDecoder(
-        streamLoader: Loader?,
-        listener: RenderListener?
-    ): FrameSeqDecoder2
 
     /**
      * @param loopLimit <=0为无限播放,>0为实际播放次数
@@ -102,7 +126,7 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         if (BaseFrameSeqDecoder.DEBUG) {
             Log.d(TAG, "$this,start")
         }
-        frameSeqDecoder.addRenderListener(this)
+        frameSeqDecoder.addRenderListener(renderListener)
         if (autoPlay || !frameSeqDecoder.isRunning) {
             frameSeqDecoder.start()
         }
@@ -114,7 +138,7 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
         if (BaseFrameSeqDecoder.DEBUG) {
             Log.d(TAG, "$this,stop")
         }
-        frameSeqDecoder.removeRenderListener(this)
+        frameSeqDecoder.removeRenderListener(renderListener)
         if (autoPlay) {
             frameSeqDecoder.stop()
         } else {
@@ -155,45 +179,6 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
     }
 
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
-
-    override fun onStart() {
-        for (animationCallback in animationCallbacks.asIterable()) {
-            animationCallback.onAnimationStart(this@FrameAnimationDrawable)
-        }
-    }
-
-    override fun onEnd() {
-        uiHandler.post {
-            for (animationCallback in animationCallbacks.asIterable()) {
-                animationCallback.onAnimationEnd(this@FrameAnimationDrawable)
-            }
-        }
-    }
-
-    override fun onRender(byteBuffer: ByteBuffer) {
-        if (!isRunning) {
-            return
-        }
-        val bitmap = unrecycledBitmap ?: frameSeqDecoder.createBitmap()
-        this.bitmap = bitmap
-
-        byteBuffer.rewind()
-        if (byteBuffer.remaining() < bitmap.byteCount) {
-            Log.e(TAG, "onRender:Buffer not large enough for pixels")
-            return
-        }
-        bitmap.copyPixelsFromBuffer(byteBuffer)
-        uiHandler.post(invalidateRunnable)
-    }
-
-    private fun FrameSeqDecoder2.createBitmap(): Bitmap {
-        val viewport = getViewport()
-        return Bitmap.createBitmap(
-            viewport.width / sampleSize,
-            viewport.height / sampleSize,
-            Bitmap.Config.ARGB_8888
-        )
-    }
 
     override fun setVisible(visible: Boolean, restart: Boolean): Boolean {
         hookRecordCallbacks()
@@ -277,5 +262,14 @@ abstract class FrameAnimationDrawable : Drawable, Animatable2Compat, RenderListe
 
     companion object {
         private val TAG = FrameAnimationDrawable::class.java.simpleName
+
+        private fun FrameSeqDecoder2.createBitmap(): Bitmap {
+            val viewport = getViewport()
+            return Bitmap.createBitmap(
+                viewport.width / sampleSize,
+                viewport.height / sampleSize,
+                Bitmap.Config.ARGB_8888
+            )
+        }
     }
 }

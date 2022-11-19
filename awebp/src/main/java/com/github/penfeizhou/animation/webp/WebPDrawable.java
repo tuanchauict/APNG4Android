@@ -19,16 +19,11 @@ import com.github.penfeizhou.animation.webp.decode.WebPDecoder;
 public class WebPDrawable extends FrameAnimationDrawable {
 
     public WebPDrawable(Loader provider) {
-        super(provider);
+        super(new WebPDecoder(provider));
     }
 
     public WebPDrawable(WebPDecoder decoder) {
         super(decoder);
-    }
-
-    @Override
-    protected WebPDecoder createFrameSeqDecoder(Loader streamLoader, RenderListener listener) {
-        return new WebPDecoder(streamLoader, listener);
     }
 
     public static WebPDrawable fromAsset(Context context, String assetPath) {

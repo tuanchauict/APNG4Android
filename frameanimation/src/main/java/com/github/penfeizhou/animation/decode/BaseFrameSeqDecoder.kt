@@ -2,7 +2,6 @@ package com.github.penfeizhou.animation.decode
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -17,7 +16,7 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
-abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener: RenderListener?) {
+abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
     private var frameBuffer: ByteBuffer? = null
     // TODO: Remove this
     val currentFrameBuffer: ByteBuffer?
@@ -32,8 +31,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
             .getLooper(FrameDecoderExecutor.getInstance().generateTaskId())
     )
 
-    private val renderListeners: MutableSet<RenderListener> =
-        listOfNotNull(renderListener).toMutableSet()
+    private val renderListeners: MutableSet<RenderListener> = mutableSetOf()
 
     private val renderTask: Runnable = RenderTaskRunnable()
 

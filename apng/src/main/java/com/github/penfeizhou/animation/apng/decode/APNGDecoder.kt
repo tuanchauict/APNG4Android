@@ -28,10 +28,7 @@ import java.nio.ByteOrder
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-13
  */
-class APNGDecoder(
-    loader: Loader,
-    renderListener: RenderListener?
-) : FrameSeqDecoder2(loader, renderListener) {
+class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
     private val paint = Paint().apply { isAntiAlias = true }
 
     private class SnapShot {

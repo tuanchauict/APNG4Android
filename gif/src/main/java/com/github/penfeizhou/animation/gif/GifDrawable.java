@@ -17,18 +17,12 @@ import com.github.penfeizhou.animation.loader.ResourceStreamLoader;
  */
 public class GifDrawable extends FrameAnimationDrawable {
     public GifDrawable(Loader provider) {
-        super(provider);
+        super(new GifDecoder(provider));
     }
 
     public GifDrawable(GifDecoder decoder) {
         super(decoder);
     }
-
-    @Override
-    protected GifDecoder createFrameSeqDecoder(Loader loader, RenderListener listener) {
-        return new GifDecoder(loader, listener);
-    }
-
 
     public static GifDrawable fromAsset(Context context, String assetPath) {
         AssetStreamLoader assetStreamLoader = new AssetStreamLoader(context, assetPath);

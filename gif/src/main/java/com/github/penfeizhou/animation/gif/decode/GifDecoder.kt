@@ -19,10 +19,7 @@ import java.nio.ByteBuffer
  * @Author: pengfei.zhou
  * @CreateDate: 2019-05-16
  */
-class GifDecoder(
-    loader: Loader,
-    renderListener: RenderListener?
-) : FrameSeqDecoder2(loader, renderListener) {
+class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
     private val paint = Paint().apply { isAntiAlias = true }
     private var bgColor = Color.TRANSPARENT
     private val snapShot = SnapShot()

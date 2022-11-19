@@ -46,11 +46,11 @@ public class ByteBufferAnimationDecoder implements ResourceDecoder<ByteBuffer, F
         };
         final FrameSeqDecoder2 decoder;
         if (WebPParser.isAWebP(new ByteBufferReader(source))) {
-            decoder = new WebPDecoder(loader, null);
+            decoder = new WebPDecoder(loader);
         } else if (APNGParser.isAPNG(new ByteBufferReader(source))) {
-            decoder = new APNGDecoder(loader, null);
+            decoder = new APNGDecoder(loader);
         } else if (GifParser.isGif(new ByteBufferReader(source))) {
-            decoder = new GifDecoder(loader, null);
+            decoder = new GifDecoder(loader);
         } else {
             return null;
         }

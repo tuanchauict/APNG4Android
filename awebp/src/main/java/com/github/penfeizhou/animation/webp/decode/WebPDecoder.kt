@@ -10,7 +10,6 @@ import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
-import com.github.penfeizhou.animation.decode.RenderListener
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -20,12 +19,8 @@ import java.nio.ByteBuffer
 
 /**
  * @param loader         webp stream loader
- * @param renderListener callback for rendering
  */
-class WebPDecoder(
-    loader: Loader,
-    renderListener: RenderListener?
-) : FrameSeqDecoder2(loader, renderListener) {
+class WebPDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
     private val mTransparentFillPaint: Paint = Paint().apply {
         color = Color.TRANSPARENT
         style = Paint.Style.FILL

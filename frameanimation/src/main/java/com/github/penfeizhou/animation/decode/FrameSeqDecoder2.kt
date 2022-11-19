@@ -7,10 +7,7 @@ import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
 import kotlin.math.min
 
-abstract class FrameSeqDecoder2(
-    loader: Loader,
-    renderListener: RenderListener?
-) : BaseFrameSeqDecoder(loader, renderListener) {
+abstract class FrameSeqDecoder2(loader: Loader) : BaseFrameSeqDecoder(loader) {
 
     /**
      * Returns true when the sample size is changed.
