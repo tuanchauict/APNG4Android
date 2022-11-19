@@ -3,6 +3,7 @@ package com.github.penfeizhou.animation.gif.decode
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
+import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
@@ -73,10 +74,10 @@ class GifDecoder(
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {
         val gifFrame = frame as GifFrame
         val bitmap =
-            obtainBitmap(viewport!!.width() / sampleSize, viewport!!.height() / sampleSize)
+            obtainBitmap(viewport.width / sampleSize, viewport.height / sampleSize)
                 ?: return
         val canvas = getCanvas(bitmap)
 
@@ -105,8 +106,8 @@ class GifDecoder(
                     snapShot.byteBuffer!!.rewind()
                     canvas.drawColor(bgColor, PorterDuff.Mode.CLEAR)
                     val preBitmap = obtainBitmap(
-                        viewport!!.width() / sampleSize,
-                        viewport!!.height() / sampleSize
+                        viewport.width / sampleSize,
+                        viewport.height / sampleSize
                     )
                     preBitmap!!.copyPixelsFromBuffer(snapShot.byteBuffer)
                     canvas.drawBitmap(preBitmap, 0f, 0f, paint)

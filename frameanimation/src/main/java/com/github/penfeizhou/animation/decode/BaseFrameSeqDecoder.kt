@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.util.Size
 import androidx.annotation.WorkerThread
 import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.FilterReader
@@ -66,9 +67,6 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
                 Log.i(TAG, "$debugInfo Update state to $value")
             }
         }
-
-    protected val viewport: Rect?
-        get() = imageInfo?.viewport
 
     @Volatile
     private var imageInfo: ImageInfo? = null
@@ -155,7 +153,8 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         }
         val frame = getFrame(frameIndex) ?: return 0
         val frameBuffer = frameBuffer ?: return 0
-        renderFrame(frame, frameBuffer)
+        val viewport = imageInfo?.size ?: return 0
+        renderFrame(frame, frameBuffer, viewport)
         return frame.frameDuration.toLong()
     }
 
@@ -283,7 +282,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader, renderListener:
         ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
-    protected abstract fun renderFrame(frame: Frame, frameBuffer: ByteBuffer)
+    protected abstract fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size)
 
     fun getFrame(index: Int): Frame? = frames.getOrNull(index)
 

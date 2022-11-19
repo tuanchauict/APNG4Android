@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
@@ -82,14 +83,11 @@ class WebPDecoder(
         return ImageInfo(loopCount, canvasWidth, canvasHeight)
     }
 
-    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
-        if (viewport == null) {
+    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {
+        if (viewport.width <= 0 || viewport.height <= 0) {
             return
         }
-        if (viewport!!.width() <= 0 || viewport!!.height() <= 0) {
-            return
-        }
-        val bitmap = obtainBitmap(viewport!!.width() / sampleSize, viewport!!.height() / sampleSize)
+        val bitmap = obtainBitmap(viewport.width / sampleSize, viewport.height / sampleSize)
             ?: return
         val canvas = getCanvas(bitmap)
         // 从缓存中恢复当前帧
@@ -125,9 +123,5 @@ class WebPDecoder(
         frameBuffer.rewind()
         bitmap.copyPixelsToBuffer(frameBuffer)
         recycleBitmap(bitmap)
-    }
-
-    companion object {
-        private val TAG = WebPDecoder::class.java.simpleName
     }
 }

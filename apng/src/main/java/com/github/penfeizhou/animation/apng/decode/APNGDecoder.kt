@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.Rect
+import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
@@ -80,13 +81,12 @@ class APNGDecoder(
         return imageInfo
     }
 
-    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer) {
-        val viewport = viewport ?: return
+    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {
         try {
             val bitmap =
                 obtainBitmap(
-                    width = viewport.width() / sampleSize,
-                    height = viewport.height() / sampleSize
+                    width = viewport.width / sampleSize,
+                    height = viewport.height / sampleSize
                 ) ?: return
             val canvas = getCanvas(bitmap)
 
