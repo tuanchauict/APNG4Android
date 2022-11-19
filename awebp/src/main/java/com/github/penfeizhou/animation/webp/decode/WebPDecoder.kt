@@ -84,12 +84,14 @@ class WebPDecoder(
         return ImageInfo(loopCount, Size(canvasWidth, canvasHeight), frames)
     }
 
-    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {
-        if (viewport.width <= 0 || viewport.height <= 0) {
+    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
+        if (imageInfo.viewport.width <= 0 || imageInfo.viewport.height <= 0) {
             return
         }
-        val bitmap = obtainBitmap(viewport.width / sampleSize, viewport.height / sampleSize)
-            ?: return
+        val bitmap = obtainBitmap(
+            imageInfo.viewport.width / sampleSize,
+            imageInfo.viewport.height / sampleSize
+        ) ?: return
         val canvas = getCanvas(bitmap)
         // 从缓存中恢复当前帧
         frameBuffer.rewind()
@@ -101,7 +103,7 @@ class WebPDecoder(
                 canvas.drawColor(backgroundColor, PorterDuff.Mode.SRC)
             }
         } else {
-            val preFrame = frames[frameIndex - 1]
+            val preFrame = imageInfo.frames[frameIndex - 1]
             // Dispose to background color. Fill the rectangle on the canvas covered by the current frame with background color specified in the ANIM chunk.
             if (preFrame is AnimationFrame &&
                 preFrame.disposalMethod

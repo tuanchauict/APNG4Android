@@ -53,7 +53,7 @@ class APNGDecoder(
 
         val isAnimated = result.actlChunk != null
         val loopCount = result.actlChunk?.num_plays ?: 1
-        val viewport = Size(result.ihdrChunk.width,result.ihdrChunk.height)
+        val viewport = Size(result.ihdrChunk.width, result.ihdrChunk.height)
         val frames = mutableListOf<Frame>()
         when {
             isAnimated ->
@@ -78,13 +78,12 @@ class APNGDecoder(
         return ImageInfo(loopCount, viewport, frames)
     }
 
-    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {
+    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
         try {
-            val bitmap =
-                obtainBitmap(
-                    width = viewport.width / sampleSize,
-                    height = viewport.height / sampleSize
-                ) ?: return
+            val bitmap = obtainBitmap(
+                width = imageInfo.viewport.width / sampleSize,
+                height = imageInfo.viewport.height / sampleSize
+            ) ?: return
             val canvas = getCanvas(bitmap)
 
             if (frame is APNGFrame) {

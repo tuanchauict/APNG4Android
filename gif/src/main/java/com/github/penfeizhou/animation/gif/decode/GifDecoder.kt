@@ -76,11 +76,12 @@ class GifDecoder(
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(frame: Frame, frameBuffer: ByteBuffer, viewport: Size) {
+    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
         val gifFrame = frame as GifFrame
-        val bitmap =
-            obtainBitmap(viewport.width / sampleSize, viewport.height / sampleSize)
-                ?: return
+        val bitmap = obtainBitmap(
+            imageInfo.viewport.width / sampleSize,
+            imageInfo.viewport.height / sampleSize
+        ) ?: return
         val canvas = getCanvas(bitmap)
 
         frameBuffer.rewind()
@@ -92,7 +93,7 @@ class GifDecoder(
         if (frameIndex == 0) {
             bitmap.eraseColor(backgroundColor)
         } else {
-            val preFrame = frames[frameIndex - 1] as GifFrame
+            val preFrame = imageInfo.frames[frameIndex - 1] as GifFrame
             canvas.save()
             canvas.clipRect(
                 preFrame.frameX / sampleSize,
@@ -108,8 +109,8 @@ class GifDecoder(
                     snapShot.byteBuffer!!.rewind()
                     canvas.drawColor(bgColor, PorterDuff.Mode.CLEAR)
                     val preBitmap = obtainBitmap(
-                        viewport.width / sampleSize,
-                        viewport.height / sampleSize
+                        imageInfo.viewport.width / sampleSize,
+                        imageInfo.viewport.height / sampleSize
                     )
                     preBitmap!!.copyPixelsFromBuffer(snapShot.byteBuffer)
                     canvas.drawBitmap(preBitmap, 0f, 0f, paint)
