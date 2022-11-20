@@ -19,7 +19,7 @@ abstract class FrameSeqDecoder2(loader: Loader) : BaseFrameSeqDecoder(loader) {
         }
         val isCurrentlyRunning = isRunning
 
-        ensureWorkerExecute {
+        frameLooper.ensureWorkerExecute {
             innerStop()
             sampleSize = sample
             try {

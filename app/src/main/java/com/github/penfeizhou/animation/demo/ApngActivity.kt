@@ -12,12 +12,15 @@ import androidx.appcompat.app.AppCompatActivity
 import com.github.penfeizhou.animation.apng.APNGDrawable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 class ApngActivity : AppCompatActivity() {
+    private var job: Job? = null
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +54,7 @@ class ApngActivity : AppCompatActivity() {
         indicatorView.setOnClickListener {
             Runtime.getRuntime().gc()
         }
-        CoroutineScope(Dispatchers.Main).launch {
+        job = CoroutineScope(Dispatchers.Main).launch {
             flow {
                 while (true) {
                     delay(200)
@@ -69,6 +72,7 @@ class ApngActivity : AppCompatActivity() {
         "$value".reversed().chunked(3).joinToString(",").reversed()
 
     override fun onDestroy() {
+        job?.cancel()
         val imageView = findViewById<ImageView>(R.id.imageView)
         (imageView.drawable as? APNGDrawable)?.stop()
         super.onDestroy()

@@ -2,12 +2,9 @@ package com.github.penfeizhou.animation.decode
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.util.Size
 import androidx.annotation.WorkerThread
-import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
 import java.io.IOException
@@ -16,8 +13,12 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
-abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
+abstract class BaseFrameSeqDecoder(
+    protected val loader: Loader,
+    private val currentTimeProvider: () -> Long = System::currentTimeMillis
+) {
     private var frameBuffer: ByteBuffer? = null
+
     // TODO: Remove this
     val currentFrameBuffer: ByteBuffer?
         get() = frameBuffer
@@ -26,14 +27,9 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
 
     internal val paused = AtomicBoolean(true)
 
-    private val workerHandler = Handler(
-        FrameDecoderExecutor.getInstance()
-            .getLooper(FrameDecoderExecutor.getInstance().generateTaskId())
-    )
-
     private val renderListeners: MutableSet<RenderListener> = mutableSetOf()
 
-    private val renderTask: Runnable = RenderTaskRunnable()
+    internal val frameLooper = FrameLooper(::onFrame)
 
     private val bitmapPool = BitmapPool()
     private val bitmapReaderManager = BitmapReaderManager(loader)
@@ -86,7 +82,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
                 Log.e(TAG, "$debugInfo in finishing. Do not interrupt")
             }
             val thread = Thread.currentThread()
-            ensureWorkerExecute {
+            frameLooper.ensureWorkerExecute {
                 try {
                     if (imageInfo == null) {
                         initCanvasBounds()
@@ -117,6 +113,33 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
 
     protected fun getCanvas(bitmap: Bitmap): Canvas =
         cachedCanvas.getOrPut(bitmap) { Canvas(bitmap) }
+
+    private fun onFrame() {
+        if (DEBUG) {
+            Log.d(TAG, "$this#run")
+        }
+
+        if (paused.get()) {
+            return
+        }
+
+        if (!canStep()) {
+            stop()
+            return
+        }
+
+        val start = currentTimeProvider.invoke()
+        val delay = step()
+        val cost = currentTimeProvider.invoke() - start
+
+        // Schedule next frame
+        frameLooper.schedule(delay - cost)
+
+        val frameBuffer = frameBuffer ?: return
+        for (listener in renderListeners) {
+            listener.onRender(frameBuffer)
+        }
+    }
 
     internal fun canStep(): Boolean {
         if (!isRunning || frameCount == 0) {
@@ -170,7 +193,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
         }
 
         state = State.INITIALIZING
-        ensureWorkerExecute(::innerStart)
+        frameLooper.ensureWorkerExecute(::innerStart)
     }
 
     @WorkerThread
@@ -196,7 +219,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
 
         if (numPlays == 0 || !finished) {
             frameIndex = -1
-            renderTask.run()
+            frameLooper.schedule()
 
             for (listener in renderListeners) {
                 listener.onStart()
@@ -206,7 +229,7 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
         }
     }
 
-    fun stopIfNeeded() = ensureWorkerExecute {
+    fun stopIfNeeded() = frameLooper.ensureWorkerExecute {
         if (renderListeners.isEmpty()) {
             stop()
         }
@@ -227,12 +250,12 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
         }
         state = State.FINISHING
 
-        ensureWorkerExecute(::innerStop)
+        frameLooper.ensureWorkerExecute(::innerStop)
     }
 
     @WorkerThread
     internal fun innerStop() {
-        workerHandler.removeCallbacks(renderTask)
+        frameLooper.stop()
         imageInfo = null
         bitmapPool.clear()
         frameBuffer = null
@@ -255,16 +278,16 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
 
     fun resume() {
         paused.set(false)
-        workerHandler.removeCallbacks(renderTask)
-        workerHandler.post(renderTask)
+        frameLooper.stop()
+        frameLooper.schedule()
     }
 
     fun pause() {
-        workerHandler.removeCallbacks(renderTask)
+        frameLooper.stop()
         paused.set(true)
     }
 
-    fun reset() = ensureWorkerExecute {
+    fun reset() = frameLooper.ensureWorkerExecute {
         playCount = 0
         frameIndex = -1
         finished = false
@@ -273,10 +296,10 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
     fun isPaused(): Boolean = paused.get()
 
     fun addRenderListener(listener: RenderListener) =
-        ensureWorkerExecute { renderListeners.add(listener) }
+        frameLooper.ensureWorkerExecute { renderListeners.add(listener) }
 
     fun removeRenderListener(listener: RenderListener) =
-        ensureWorkerExecute { renderListeners.remove(listener) }
+        frameLooper.ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
     protected abstract fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer)
@@ -303,49 +326,6 @@ abstract class BaseFrameSeqDecoder(protected val loader: Loader) {
 
     fun setLoopLimit(limit: Int) {
         loopLimit = limit
-    }
-
-    internal fun ensureWorkerExecute(block: () -> Unit) {
-        if (Looper.myLooper() == workerHandler.looper) {
-            println("#1: Thread ${Thread.currentThread().name}")
-            block()
-        } else {
-            workerHandler.post {
-                println("#2: Thread ${Thread.currentThread().name}")
-                block()
-            }
-        }
-    }
-
-    private inner class RenderTaskRunnable(
-        private val currentTimeProvider: () -> Long = System::currentTimeMillis
-    ) : Runnable {
-        override fun run() {
-            if (DEBUG) {
-                Log.d(TAG, "$this#run")
-            }
-
-            if (paused.get()) {
-                return
-            }
-
-            if (!canStep()) {
-                stop()
-                return
-            }
-
-            val start = currentTimeProvider.invoke()
-            val delay = step()
-            val cost = currentTimeProvider.invoke() - start
-
-            // Schedule next frame
-            workerHandler.postDelayed(this, (delay - cost).coerceAtLeast(0))
-
-            val frameBuffer = frameBuffer ?: return
-            for (listener in renderListeners) {
-                listener.onRender(frameBuffer)
-            }
-        }
     }
 
     internal enum class State {
