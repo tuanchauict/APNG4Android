@@ -93,10 +93,10 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
             val preFrame = imageInfo.frames[frameIndex - 1] as GifFrame
             canvas.save()
             canvas.clipRect(
-                preFrame.frameX / sampleSize,
-                preFrame.frameY / sampleSize,
-                (preFrame.frameX + preFrame.frameWidth) / sampleSize,
-                (preFrame.frameY + preFrame.frameHeight) / sampleSize
+                preFrame.x / sampleSize,
+                preFrame.y / sampleSize,
+                (preFrame.x + preFrame.width) / sampleSize,
+                (preFrame.y + preFrame.height) / sampleSize
             )
             when (preFrame.disposalMethod) {
                 0 -> {}
@@ -124,7 +124,7 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
             }
         }
         val reused =
-            obtainBitmap(frame.frameWidth / sampleSize, frame.frameHeight / sampleSize)
+            obtainBitmap(frame.width / sampleSize, frame.height / sampleSize)
                 ?: return
         gifFrame.draw(canvas, paint, sampleSize, reused, writer)
         canvas.drawColor(backgroundColor, PorterDuff.Mode.DST_OVER)

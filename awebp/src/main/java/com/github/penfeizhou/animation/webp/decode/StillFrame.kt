@@ -20,10 +20,6 @@ class StillFrame(
     width: Int,
     height: Int
 ) : KFrame(x = 0, y = 0, width = width, height = height, duration = 0) {
-    init {
-        frameWidth = width
-        frameHeight = height
-    }
 
     override fun draw(
         canvas: Canvas,

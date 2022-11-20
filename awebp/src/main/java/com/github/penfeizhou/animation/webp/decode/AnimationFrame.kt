@@ -42,8 +42,8 @@ class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : K
         writer.putUInt32(vp8xPayloadSize)
         writer.putByte((if (useAlpha) 0x10 else 0).toByte())
         writer.putUInt24(0)
-        writer.put1Based(frameWidth)
-        writer.put1Based(frameHeight)
+        writer.put1Based(width)
+        writer.put1Based(height)
 
         // ImageData
         try {
@@ -91,10 +91,10 @@ class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : K
             srcRect.top = 0
             srcRect.right = bitmap.width
             srcRect.bottom = bitmap.height
-            dstRect.left = (frameX.toFloat() * 2 / sampleSize).toInt()
-            dstRect.top = (frameY.toFloat() * 2 / sampleSize).toInt()
-            dstRect.right = (frameX.toFloat() * 2 / sampleSize + bitmap.width).toInt()
-            dstRect.bottom = (frameY.toFloat() * 2 / sampleSize + bitmap.height).toInt()
+            dstRect.left = (x.toFloat() * 2 / sampleSize).toInt()
+            dstRect.top = (y.toFloat() * 2 / sampleSize).toInt()
+            dstRect.right = (x.toFloat() * 2 / sampleSize + bitmap.width).toInt()
+            dstRect.bottom = (y.toFloat() * 2 / sampleSize + bitmap.height).toInt()
             canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
         } else {
             bitmap = reusedBitmap

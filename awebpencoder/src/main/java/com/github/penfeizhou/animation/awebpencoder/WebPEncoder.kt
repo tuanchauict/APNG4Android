@@ -50,7 +50,7 @@ class WebPEncoder {
         val frameCount = decoder.frameCount
         val delay: MutableList<Int> = ArrayList()
         for (i in 0 until frameCount) {
-            delay.add(decoder.getFrame(i)!!.frameDuration)
+            delay.add(decoder.getFrame(i)!!.duration)
         }
         for (i in 0 until frameCount) {
             try {
@@ -99,12 +99,12 @@ class WebPEncoder {
             }
             val writer = GifWriter()
             for (frame in frames) {
-                writer.reset(frame.frameWidth * frame.frameHeight)
+                writer.reset(frame.width * frame.height)
                 val pixels = writer.asIntArray()
                 frame.encode(pixels, 1)
                 val bitmap = Bitmap.createBitmap(
-                    frame.frameWidth,
-                    frame.frameHeight,
+                    frame.width,
+                    frame.height,
                     Bitmap.Config.ARGB_8888
                 )
                 bitmap.copyPixelsFromBuffer(writer.asIntBuffer().rewind())
@@ -127,9 +127,9 @@ class WebPEncoder {
                 }
                 frameBuilder
                     .bitmap(bitmap)
-                    .duration(frame.frameDuration)
-                    .offsetX(frame.frameX)
-                    .offsetY(frame.frameY)
+                    .duration(frame.duration)
+                    .offsetX(frame.x)
+                    .offsetY(frame.y)
                     .disposal(disposal)
                     .blending(blending)
                 frameInfoList.add(frameBuilder.build())

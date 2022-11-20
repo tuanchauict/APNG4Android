@@ -3,25 +3,20 @@ package com.github.penfeizhou.animation.decode
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import com.github.penfeizhou.animation.io.Writer
 
 abstract class KFrame(
-    x: Int,
-    y: Int,
-    width: Int,
-    height: Int,
-    duration: Int
-) : Frame() {
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+    val duration: Int
+) {
+    protected val srcRect = Rect()
+    protected val dstRect = Rect()
 
-    init {
-        this.frameX = x
-        this.frameY = y
-        this.frameWidth = width
-        this.frameHeight = height
-        this.frameDuration = duration
-    }
-
-    abstract override fun draw(
+    abstract fun draw(
         canvas: Canvas,
         paint: Paint,
         sampleSize: Int,

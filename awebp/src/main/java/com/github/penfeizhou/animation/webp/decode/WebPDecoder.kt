@@ -104,18 +104,18 @@ class WebPDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
             if (preFrame is AnimationFrame &&
                 preFrame.disposalMethod
             ) {
-                val left = preFrame.frameX.toFloat() * 2 / sampleSize.toFloat()
-                val top = preFrame.frameY.toFloat() * 2 / sampleSize.toFloat()
+                val left = preFrame.x.toFloat() * 2 / sampleSize.toFloat()
+                val top = preFrame.y.toFloat() * 2 / sampleSize.toFloat()
                 val right =
-                    (preFrame.frameX * 2 + preFrame.frameWidth).toFloat() / sampleSize.toFloat()
+                    (preFrame.x * 2 + preFrame.width).toFloat() / sampleSize.toFloat()
                 val bottom =
-                    (preFrame.frameY * 2 + preFrame.frameHeight).toFloat() / sampleSize.toFloat()
+                    (preFrame.y * 2 + preFrame.height).toFloat() / sampleSize.toFloat()
                 canvas.drawRect(left, top, right, bottom, mTransparentFillPaint)
             }
         }
         var inBitmap: Bitmap? = null
-        if (frame.frameWidth > 0 && frame.frameHeight > 0) {
-            inBitmap = obtainBitmap(frame.frameWidth / sampleSize, frame.frameHeight / sampleSize)
+        if (frame.width > 0 && frame.height > 0) {
+            inBitmap = obtainBitmap(frame.width / sampleSize, frame.height / sampleSize)
         }
         if (inBitmap == null) {
             return

@@ -48,7 +48,7 @@ class GifFrame(
         writer: Writer
     ): Bitmap {
         try {
-            writer.reset(frameWidth * frameHeight / (sampleSize * sampleSize))
+            writer.reset(width * height / (sampleSize * sampleSize))
             val pixels = writer.asIntArray()
             encode(pixels, sampleSize)
             reusedBitmap.copyPixelsFromBuffer(writer.asIntBuffer().rewind())
@@ -56,10 +56,10 @@ class GifFrame(
             srcRect.top = 0
             srcRect.right = reusedBitmap.width
             srcRect.bottom = reusedBitmap.height
-            dstRect.left = (frameX.toFloat() / sampleSize).toInt()
-            dstRect.top = (frameY.toFloat() / sampleSize).toInt()
-            dstRect.right = (frameX.toFloat() / sampleSize + reusedBitmap.width).toInt()
-            dstRect.bottom = (frameY.toFloat() / sampleSize + reusedBitmap.height).toInt()
+            dstRect.left = (x.toFloat() / sampleSize).toInt()
+            dstRect.top = (y.toFloat() / sampleSize).toInt()
+            dstRect.right = (x.toFloat() / sampleSize + reusedBitmap.width).toInt()
+            dstRect.bottom = (y.toFloat() / sampleSize + reusedBitmap.height).toInt()
             canvas.drawBitmap(reusedBitmap, srcRect, dstRect, paint)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -81,8 +81,8 @@ class GifFrame(
             colorTable!!.colorTable,
             transparentColorIndex,
             pixels,
-            frameWidth / sampleSize,
-            frameHeight / sampleSize,
+            width / sampleSize,
+            height / sampleSize,
             lzwMinCodeSize,
             interlace,
             dataBlock

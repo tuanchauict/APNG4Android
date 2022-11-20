@@ -175,7 +175,7 @@ abstract class BaseFrameSeqDecoder(
         val frameBuffer = frameBuffer ?: return 0
         val imageInfo = imageInfo ?: return 0
         renderFrame(imageInfo, frame, frameBuffer)
-        return frame.frameDuration.toLong()
+        return frame.duration.toLong()
     }
 
     fun start() {

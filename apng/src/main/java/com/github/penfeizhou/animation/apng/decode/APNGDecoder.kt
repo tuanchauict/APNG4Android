@@ -87,7 +87,7 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
                 prepareApngBitmap(frame, bitmap, canvas, frameBuffer)
             }
             // Start actually drawing the content of the current frame
-            val inBitmap = obtainBitmap(frame.frameWidth, frame.frameHeight) ?: return
+            val inBitmap = obtainBitmap(frame.width, frame.height) ?: return
             recycleBitmap(frame.draw(canvas, paint, sampleSize, inBitmap, apngWriter))
             recycleBitmap(inBitmap)
             frameBuffer.rewind()
@@ -137,18 +137,18 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         canvas.save()
         if (frame.blendOp == FCTLChunk.APNG_BLEND_OP_SOURCE) {
             canvas.clipRect(
-                frame.frameX / sampleSize,
-                frame.frameY / sampleSize,
-                (frame.frameX + frame.frameWidth) / sampleSize,
-                (frame.frameY + frame.frameHeight) / sampleSize
+                frame.x / sampleSize,
+                frame.y / sampleSize,
+                (frame.x + frame.width) / sampleSize,
+                (frame.y + frame.height) / sampleSize
             )
             canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         }
         snapShot.dstRect.set(
-            frame.frameX / sampleSize,
-            frame.frameY / sampleSize,
-            (frame.frameX + frame.frameWidth) / sampleSize,
-            (frame.frameY + frame.frameHeight) / sampleSize
+            frame.x / sampleSize,
+            frame.y / sampleSize,
+            (frame.x + frame.width) / sampleSize,
+            (frame.y + frame.height) / sampleSize
         )
         canvas.restore()
     }

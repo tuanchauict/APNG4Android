@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Rect
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeFourCC
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeInt
 import com.github.penfeizhou.animation.decode.KFrame
@@ -31,9 +30,6 @@ class APNGFrame internal constructor(
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
 
-    private val srcRect = Rect()
-    private val dstRect = Rect()
-
     private val frameSizeInBytes: Int by lazy {
         calculateFrameSizeInBytes()
     }
@@ -55,8 +51,8 @@ class APNGFrame internal constructor(
 
         srcRect.set(0, 0, bitmap.width, bitmap.height)
 
-        val destLeft = frameX / sampleSize
-        val destTop = frameY / sampleSize
+        val destLeft = x / sampleSize
+        val destTop = y / sampleSize
         dstRect.set(destLeft, destTop, destLeft + bitmap.width, destTop + bitmap.height)
         canvas.drawBitmap(bitmap, srcRect, dstRect, paint)
         return bitmap
@@ -92,8 +88,8 @@ class APNGFrame internal constructor(
         writer.writeInt(13)
         var start = writer.position()
         writer.writeFourCC(IHDRChunk.ID)
-        writer.writeInt(frameWidth)
-        writer.writeInt(frameHeight)
+        writer.writeInt(width)
+        writer.writeInt(height)
         writer.putBytes(ihdrData)
         val crc32 = CRC32_THREAD_LOCAL.getOrSet { CRC32() }
         crc32.reset()
