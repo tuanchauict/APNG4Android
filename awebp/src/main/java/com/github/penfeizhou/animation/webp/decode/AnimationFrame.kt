@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.webp.io.WebPWriter.put1Based
@@ -15,28 +15,18 @@ import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt24
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt32
 import java.io.IOException
 
-class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : Frame() {
-    val imagePayloadOffset: Int
-    val imagePayloadSize: Int
-    val blendingMethod: Boolean
-    val disposalMethod: Boolean
-    private val useAlpha: Boolean
-
-    init {
-        frameWidth = anmfChunk.frameWidth
-        frameHeight = anmfChunk.frameHeight
-        frameX = anmfChunk.frameX
-        frameY = anmfChunk.frameY
-        frameDuration = anmfChunk.frameDuration
-        if (frameDuration == 0) {
-            frameDuration = 100
-        }
-        blendingMethod = anmfChunk.blendingMethod()
-        disposalMethod = anmfChunk.disposalMethod()
-        imagePayloadOffset = anmfChunk.offset + BaseChunk.CHUNCK_HEADER_OFFSET + 16
-        imagePayloadSize = anmfChunk.payloadSize - 16 + (anmfChunk.payloadSize and 1)
-        useAlpha = anmfChunk.alphChunk != null
-    }
+class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : KFrame(
+    x = anmfChunk.frameX,
+    y = anmfChunk.frameY,
+    width = anmfChunk.frameWidth,
+    height = anmfChunk.frameHeight,
+    duration = if (anmfChunk.frameDuration == 0) 100 else anmfChunk.frameDuration
+) {
+    private val imagePayloadOffset: Int = anmfChunk.offset + BaseChunk.CHUNCK_HEADER_OFFSET + 16
+    private val imagePayloadSize: Int = anmfChunk.payloadSize - 16 + (anmfChunk.payloadSize and 1)
+    private val blendingMethod: Boolean = anmfChunk.blendingMethod()
+    val disposalMethod: Boolean = anmfChunk.disposalMethod()
+    private val useAlpha: Boolean = anmfChunk.alphChunk != null
 
     private fun encode(writer: Writer): Int {
         val vp8xPayloadSize = 10
