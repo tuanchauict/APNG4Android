@@ -302,9 +302,9 @@ abstract class BaseFrameSeqDecoder(
         frameLooper.ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
-    protected abstract fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer)
+    protected abstract fun renderFrame(imageInfo: ImageInfo, frame: KFrame, frameBuffer: ByteBuffer)
 
-    fun getFrame(index: Int): Frame? = imageInfo?.frames?.getOrNull(index)
+    fun getFrame(index: Int): KFrame? = imageInfo?.frames?.getOrNull(index)
 
     // TODO: Rename this method. Init canvas bounds is not appropriate anymore.
     @WorkerThread

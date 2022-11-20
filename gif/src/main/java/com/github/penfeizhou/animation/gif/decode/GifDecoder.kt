@@ -4,9 +4,9 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.util.Size
-import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
+import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.gif.io.GifWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
@@ -42,7 +42,7 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         var graphicControlExtension: GraphicControlExtension? = null
         var bgColorIndex = -1
         var loopCount = 0
-        val frames = mutableListOf<Frame>()
+        val frames = mutableListOf<KFrame>()
 
         for (block in blocks) {
             if (block is LogicalScreenDescriptor) {
@@ -73,7 +73,7 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(imageInfo: ImageInfo, frame: KFrame, frameBuffer: ByteBuffer) {
         val gifFrame = frame as GifFrame
         val bitmap = obtainBitmap(
             imageInfo.viewport.width / sampleSize,
