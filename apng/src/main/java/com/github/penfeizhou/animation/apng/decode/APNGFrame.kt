@@ -7,7 +7,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeFourCC
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeInt
-import com.github.penfeizhou.animation.decode.KFrame
+import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
@@ -21,7 +21,7 @@ class APNGFrame internal constructor(
     private val ihdrData: ByteArray,
     private val prefixChunks: List<FramePrefixChunk>,
     private val imageChunks: List<DATChunk>
-) : KFrame(
+) : Frame(
     x = fctlChunk.x_offset,
     y = fctlChunk.y_offset,
     width = fctlChunk.width,

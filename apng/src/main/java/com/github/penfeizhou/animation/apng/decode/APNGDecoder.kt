@@ -9,7 +9,7 @@ import android.graphics.Rect
 import android.util.Size
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
-import com.github.penfeizhou.animation.decode.KFrame
+import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.area
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
@@ -51,7 +51,7 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         val isAnimated = result.actlChunk != null
         val loopCount = result.actlChunk?.num_plays ?: 1
         val viewport = Size(result.ihdrChunk.width, result.ihdrChunk.height)
-        val frames = mutableListOf<KFrame>()
+        val frames = mutableListOf<Frame>()
         when {
             isAnimated ->
                 result.frameDatas.mapIndexedTo(frames) { index, frameData ->
@@ -75,7 +75,7 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         return ImageInfo(loopCount, viewport, frames)
     }
 
-    override fun renderFrame(imageInfo: ImageInfo, frame: KFrame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
         try {
             val bitmap = obtainBitmap(
                 width = imageInfo.viewport.width / sampleSize,

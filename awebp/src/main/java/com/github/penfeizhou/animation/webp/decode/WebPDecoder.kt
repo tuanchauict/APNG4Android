@@ -9,7 +9,7 @@ import android.graphics.PorterDuffXfermode
 import android.util.Size
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
-import com.github.penfeizhou.animation.decode.KFrame
+import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -45,7 +45,7 @@ class WebPDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         var anim = false
         var vp8x = false
         var loopCount = 0
-        val frames = mutableListOf<KFrame>()
+        val frames = mutableListOf<Frame>()
         for (chunk in chunks) {
             when (chunk) {
                 is VP8XChunk -> {
@@ -80,7 +80,7 @@ class WebPDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         return ImageInfo(loopCount, Size(canvasWidth, canvasHeight), frames)
     }
 
-    override fun renderFrame(imageInfo: ImageInfo, frame: KFrame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
         if (imageInfo.viewport.width <= 0 || imageInfo.viewport.height <= 0) {
             return
         }

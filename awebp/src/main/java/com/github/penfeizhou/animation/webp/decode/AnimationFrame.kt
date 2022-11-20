@@ -7,7 +7,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
-import com.github.penfeizhou.animation.decode.KFrame
+import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import com.github.penfeizhou.animation.webp.io.WebPWriter.put1Based
@@ -16,7 +16,7 @@ import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt24
 import com.github.penfeizhou.animation.webp.io.WebPWriter.putUInt32
 import java.io.IOException
 
-class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : KFrame(
+class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : Frame(
     x = anmfChunk.frameX,
     y = anmfChunk.frameY,
     width = anmfChunk.frameWidth,

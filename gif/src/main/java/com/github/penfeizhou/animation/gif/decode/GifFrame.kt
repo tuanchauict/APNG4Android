@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
-import com.github.penfeizhou.animation.decode.KFrame
+import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
@@ -19,7 +19,7 @@ class GifFrame(
     globalColorTable: ColorTable?,
     graphicControlExtension: GraphicControlExtension?,
     imageDescriptor: ImageDescriptor
-) : KFrame(
+) : Frame(
     x = imageDescriptor.frameX,
     y = imageDescriptor.frameY,
     width = imageDescriptor.frameWidth,

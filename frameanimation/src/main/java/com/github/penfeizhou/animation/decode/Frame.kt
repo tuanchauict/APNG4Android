@@ -5,7 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import com.github.penfeizhou.animation.io.Writer
 
-abstract class KFrame(
+abstract class Frame(
     val x: Int,
     val y: Int,
     val width: Int,

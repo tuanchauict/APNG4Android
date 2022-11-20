@@ -5,7 +5,7 @@ import android.util.Size
 class ImageInfo(
     val loopCount: Int,
     val viewport: Size,
-    val frames: List<KFrame>
+    val frames: List<Frame>
 ) {
     val area: Int = viewport.width * viewport.height
 
