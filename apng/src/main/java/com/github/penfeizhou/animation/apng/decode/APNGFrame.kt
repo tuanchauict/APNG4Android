@@ -4,9 +4,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeFourCC
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeInt
-import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
@@ -20,29 +21,21 @@ class APNGFrame internal constructor(
     private val ihdrData: ByteArray,
     private val prefixChunks: List<FramePrefixChunk>,
     private val imageChunks: List<DATChunk>
-) : Frame() {
+) : KFrame(
+    x = fctlChunk.x_offset,
+    y = fctlChunk.y_offset,
+    width = fctlChunk.width,
+    height = fctlChunk.height,
+    duration = fctlChunk.getDuration()
+) {
     val blendOp: Byte = fctlChunk.blend_op
     val disposeOp: Byte = fctlChunk.dispose_op
 
+    private val srcRect = Rect()
+    private val dstRect = Rect()
+
     private val frameSizeInBytes: Int by lazy {
         calculateFrameSizeInBytes()
-    }
-
-    init {
-        frameDuration =
-            fctlChunk.delay_num * 1000 / if (fctlChunk.delay_den.toInt() == 0) 100 else fctlChunk.delay_den
-        if (frameDuration < 10) {
-            /*  Many annoying ads specify a 0 duration to make an image flash as quickly as  possible.
-            We follow Safari and Firefox's behavior and use a duration of 100 ms for any frames that specify a duration of <= 10 ms.
-            See <rdar://problem/7689300> and <http://webkit.org/b/36082> for more information.
-            See also: http://nullsleep.tumblr.com/post/16524517190/animated-gif-minimum-frame-delay-browser.
-            */
-            frameDuration = 100
-        }
-        frameWidth = fctlChunk.width
-        frameHeight = fctlChunk.height
-        frameX = fctlChunk.x_offset
-        frameY = fctlChunk.y_offset
     }
 
     override fun draw(
@@ -177,5 +170,20 @@ class APNGFrame internal constructor(
             0x82.toByte()
         )
         private val CRC32_THREAD_LOCAL = ThreadLocal<CRC32>()
+
+        private fun FCTLChunk.getDuration(): Int {
+            val delayDenominator = if (delay_den.toInt() == 0) 100 else delay_den
+            val duration = delay_num * 1000 / delayDenominator
+            return if (duration < 10) {
+                /*  Many annoying ads specify a 0 duration to make an image flash as quickly as  possible.
+                We follow Safari and Firefox's behavior and use a duration of 100 ms for any frames that specify a duration of <= 10 ms.
+                See <rdar://problem/7689300> and <http://webkit.org/b/36082> for more information.
+                See also: http://nullsleep.tumblr.com/post/16524517190/animated-gif-minimum-frame-delay-browser.
+                */
+                100
+            } else {
+                duration
+            }
+        }
     }
 }
