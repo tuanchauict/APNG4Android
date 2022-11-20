@@ -4,17 +4,16 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
-import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
-import java.lang.IllegalArgumentException
 
-internal class StillFrame(private val reader: FilterReader, width: Int, height: Int) : Frame() {
-    init {
-        frameWidth = width
-        frameHeight = height
-    }
+internal class StillFrame(
+    private val reader: FilterReader,
+    width: Int,
+    height: Int
+) : KFrame(x = 0, y = 0, width = width, height = height, duration = 0) {
 
     override fun draw(
         canvas: Canvas,
