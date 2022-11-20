@@ -21,7 +21,6 @@ import java.nio.ByteOrder
 
 /**
  * @param loader webp-like reader
- * @param renderListener Callbacks for rendering
  *
  * @Description: APNG4Android
  * @Author: pengfei.zhou
@@ -45,7 +44,7 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
     }
 
     @Throws(IOException::class)
-    override fun read(reader: FilterReader): ImageInfo {
+    override fun read(reader: FilterReader, sampleSize: Int): ImageInfo {
         val result = APNGParser.parse(reader)
 
         val isAnimated = result.actlChunk != null
@@ -75,7 +74,12 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         return ImageInfo(loopCount, viewport, frames)
     }
 
-    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(
+        imageInfo: ImageInfo,
+        frame: Frame,
+        frameBuffer: ByteBuffer,
+        sampleSize: Int
+    ) {
         try {
             val bitmap = obtainBitmap(
                 width = imageInfo.viewport.width / sampleSize,
@@ -84,7 +88,7 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
             val canvas = getCanvas(bitmap)
 
             if (frame is APNGFrame) {
-                prepareApngBitmap(frame, bitmap, canvas, frameBuffer)
+                prepareApngBitmap(frame, bitmap, canvas, frameBuffer, sampleSize)
             }
             // Start actually drawing the content of the current frame
             val inBitmap = obtainBitmap(frame.width, frame.height) ?: return
@@ -103,7 +107,8 @@ class APNGDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         frame: APNGFrame,
         bitmap: Bitmap,
         canvas: Canvas,
-        frameBuffer: ByteBuffer
+        frameBuffer: ByteBuffer,
+        sampleSize: Int
     ) {
         // Restore the current frame from the cache
         frameBuffer.rewind()

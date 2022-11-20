@@ -34,7 +34,7 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
     }
 
     @Throws(IOException::class)
-    override fun read(reader: FilterReader): ImageInfo {
+    override fun read(reader: FilterReader, sampleSize: Int): ImageInfo {
         val blocks = GifParser.parse(reader)
         var canvasWidth = 0
         var canvasHeight = 0
@@ -73,7 +73,12 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
 
     override fun getDesiredSample(desiredWidth: Int, desiredHeight: Int): Int = 1
 
-    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(
+        imageInfo: ImageInfo,
+        frame: Frame,
+        frameBuffer: ByteBuffer,
+        sampleSize: Int
+    ) {
         val gifFrame = frame as GifFrame
         val bitmap = obtainBitmap(
             imageInfo.viewport.width / sampleSize,

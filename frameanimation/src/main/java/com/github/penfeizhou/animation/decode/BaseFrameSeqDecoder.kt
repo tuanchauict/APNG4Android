@@ -63,8 +63,7 @@ abstract class BaseFrameSeqDecoder(
     val frameCount: Int
         get() = imageInfo?.frames?.size ?: 0
 
-    var sampleSize = 1
-        internal set
+    internal var sampleSize = 1
 
     val isRunning: Boolean
         get() = state == State.RUNNING || state == State.INITIALIZING
@@ -176,7 +175,7 @@ abstract class BaseFrameSeqDecoder(
         val frame = getFrame(frameIndex) ?: return 0
         val frameBuffer = frameBuffer ?: return 0
         val imageInfo = imageInfo ?: return 0
-        renderFrame(imageInfo, frame, frameBuffer)
+        renderFrame(imageInfo, frame, frameBuffer, sampleSize)
         return frame.duration.toLong()
     }
 
@@ -304,7 +303,12 @@ abstract class BaseFrameSeqDecoder(
         frameLooper.ensureWorkerExecute { renderListeners.remove(listener) }
 
     @WorkerThread
-    protected abstract fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer)
+    protected abstract fun renderFrame(
+        imageInfo: ImageInfo,
+        frame: Frame,
+        frameBuffer: ByteBuffer,
+        sampleSize: Int
+    )
 
     fun getFrame(index: Int): Frame? = imageInfo?.frames?.getOrNull(index)
 
@@ -312,14 +316,14 @@ abstract class BaseFrameSeqDecoder(
     @WorkerThread
     @Throws(IOException::class)
     internal fun initCanvasBounds() {
-        val imageInfo = read(bitmapReaderManager.getReader())
+        val imageInfo = read(bitmapReaderManager.getReader(), sampleSize)
         this.imageInfo = imageInfo
         val capacityBytes = (imageInfo.area / (sampleSize * sampleSize) + 1) * 4
         frameBuffer = ByteBuffer.allocate(capacityBytes)
     }
 
     @Throws(IOException::class)
-    protected abstract fun read(reader: FilterReader): ImageInfo
+    protected abstract fun read(reader: FilterReader, sampleSize: Int): ImageInfo
 
     fun getMemorySize(): Int {
         val frameBufferSizeBytes = frameBuffer?.capacity() ?: 0

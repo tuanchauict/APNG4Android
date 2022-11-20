@@ -40,7 +40,7 @@ class WebPDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
     override fun release() {}
 
     @Throws(IOException::class)
-    override fun read(reader: FilterReader): ImageInfo {
+    override fun read(reader: FilterReader, sampleSize: Int): ImageInfo {
         val chunks = WebPParser.parse(reader)
         var anim = false
         var vp8x = false
@@ -80,7 +80,12 @@ class WebPDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
         return ImageInfo(loopCount, Size(canvasWidth, canvasHeight), frames)
     }
 
-    override fun renderFrame(imageInfo: ImageInfo, frame: Frame, frameBuffer: ByteBuffer) {
+    override fun renderFrame(
+        imageInfo: ImageInfo,
+        frame: Frame,
+        frameBuffer: ByteBuffer,
+        sampleSize: Int
+    ) {
         if (imageInfo.viewport.width <= 0 || imageInfo.viewport.height <= 0) {
             return
         }
