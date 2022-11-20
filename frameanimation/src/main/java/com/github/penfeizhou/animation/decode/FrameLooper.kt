@@ -7,8 +7,8 @@ import com.github.penfeizhou.animation.executor.FrameDecoderExecutor
 internal class FrameLooper(private val renderTask: Runnable) {
 
     private val workerHandler = Handler(
-        FrameDecoderExecutor.getInstance()
-            .getLooper(FrameDecoderExecutor.getInstance().generateTaskId())
+        FrameDecoderExecutor.instance
+            .getLooper(FrameDecoderExecutor.instance.generateTaskId())
     )
 
     fun schedule(delay: Long = 0) {
