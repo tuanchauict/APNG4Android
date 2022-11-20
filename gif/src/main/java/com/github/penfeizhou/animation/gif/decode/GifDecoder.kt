@@ -7,7 +7,6 @@ import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
-import com.github.penfeizhou.animation.decode.RenderListener
 import com.github.penfeizhou.animation.gif.io.GifWriter
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.loader.Loader
@@ -124,7 +123,9 @@ class GifDecoder(loader: Loader) : FrameSeqDecoder2(loader) {
                 }
             }
         }
-        val reused = obtainBitmap(frame.frameWidth / sampleSize, frame.frameHeight / sampleSize)
+        val reused =
+            obtainBitmap(frame.frameWidth / sampleSize, frame.frameHeight / sampleSize)
+                ?: return
         gifFrame.draw(canvas, paint, sampleSize, reused, writer)
         canvas.drawColor(backgroundColor, PorterDuff.Mode.DST_OVER)
         recycleBitmap(reused)
