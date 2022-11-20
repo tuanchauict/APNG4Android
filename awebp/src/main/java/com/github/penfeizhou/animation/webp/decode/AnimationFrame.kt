@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -27,6 +28,9 @@ class AnimationFrame(private val reader: FilterReader, anmfChunk: ANMFChunk) : K
     private val blendingMethod: Boolean = anmfChunk.blendingMethod()
     val disposalMethod: Boolean = anmfChunk.disposalMethod()
     private val useAlpha: Boolean = anmfChunk.alphChunk != null
+
+    private val srcRect = Rect()
+    private val dstRect = Rect()
 
     private fun encode(writer: Writer): Int {
         val vp8xPayloadSize = 10

@@ -3,6 +3,7 @@ package com.github.penfeizhou.animation.gif.decode
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
@@ -37,6 +38,9 @@ class GifFrame(
     private val imageDataOffset: Int = imageDescriptor.imageDataOffset
     private val lzwMinCodeSize: Int = imageDescriptor.lzwMinimumCodeSize
     private val interlace: Boolean = imageDescriptor.interlaceFlag()
+
+    private val srcRect = Rect()
+    private val dstRect = Rect()
 
     fun transparencyFlag(): Boolean = transparentColorIndex >= 0
 

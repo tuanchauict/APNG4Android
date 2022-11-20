@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Rect
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeFourCC
 import com.github.penfeizhou.animation.apng.io.APNGWriter.writeInt
 import com.github.penfeizhou.animation.decode.KFrame
@@ -33,6 +34,9 @@ class APNGFrame internal constructor(
     private val frameSizeInBytes: Int by lazy {
         calculateFrameSizeInBytes()
     }
+
+    private val srcRect = Rect()
+    private val dstRect = Rect()
 
     override fun draw(
         canvas: Canvas,
