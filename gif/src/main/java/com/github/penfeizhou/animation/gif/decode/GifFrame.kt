@@ -3,7 +3,7 @@ package com.github.penfeizhou.animation.gif.decode
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import com.github.penfeizhou.animation.decode.Frame
+import com.github.penfeizhou.animation.decode.KFrame
 import com.github.penfeizhou.animation.io.FilterReader
 import com.github.penfeizhou.animation.io.Writer
 import java.io.IOException
@@ -18,45 +18,27 @@ class GifFrame(
     globalColorTable: ColorTable?,
     graphicControlExtension: GraphicControlExtension?,
     imageDescriptor: ImageDescriptor
-) : Frame() {
-    var disposalMethod = 0
-    private var transparentColorIndex = 0
-    private var colorTable: ColorTable? = null
-    private val imageDataOffset: Int
-    private val lzwMinCodeSize: Int
-    private val interlace: Boolean
-
-    init {
-        if (graphicControlExtension != null) {
-            disposalMethod = graphicControlExtension.disposalMethod()
-            frameDuration =
-                (if (graphicControlExtension.delayTime <= 0) DEFAULT_DELAY else graphicControlExtension.delayTime) * 10
-            transparentColorIndex = if (graphicControlExtension.transparencyFlag()) {
-                graphicControlExtension.transparentColorIndex
-            } else {
-                -1
-            }
-        } else {
-            disposalMethod = 0
-            transparentColorIndex = -1
-        }
-        frameX = imageDescriptor.frameX
-        frameY = imageDescriptor.frameY
-        frameWidth = imageDescriptor.frameWidth
-        frameHeight = imageDescriptor.frameHeight
-        interlace = imageDescriptor.interlaceFlag()
-        colorTable = if (imageDescriptor.localColorTableFlag()) {
+) : KFrame(
+    x = imageDescriptor.frameX,
+    y = imageDescriptor.frameY,
+    width = imageDescriptor.frameWidth,
+    height = imageDescriptor.frameHeight,
+    duration = graphicControlExtension?.getDuration() ?: 0
+) {
+    val disposalMethod: Int = graphicControlExtension?.disposalMethod() ?: 0
+    private val transparentColorIndex: Int =
+        graphicControlExtension?.getTransparentColorIndex() ?: -1
+    private var colorTable: ColorTable? =
+        if (imageDescriptor.localColorTableFlag()) {
             imageDescriptor.localColorTable
         } else {
             globalColorTable
         }
-        lzwMinCodeSize = imageDescriptor.lzwMinimumCodeSize
-        imageDataOffset = imageDescriptor.imageDataOffset
-    }
+    private val imageDataOffset: Int = imageDescriptor.imageDataOffset
+    private val lzwMinCodeSize: Int = imageDescriptor.lzwMinimumCodeSize
+    private val interlace: Boolean = imageDescriptor.interlaceFlag()
 
-    fun transparencyFlag(): Boolean {
-        return transparentColorIndex >= 0
-    }
+    fun transparencyFlag(): Boolean = transparentColorIndex >= 0
 
     override fun draw(
         canvas: Canvas,
@@ -126,5 +108,11 @@ class GifFrame(
 
         private val sDataBlock = ThreadLocal<ByteArray>()
         private const val DEFAULT_DELAY = 10
+
+        private fun GraphicControlExtension.getDuration(): Int =
+            (if (delayTime <= 0) DEFAULT_DELAY else delayTime) * 10
+
+        private fun GraphicControlExtension.getTransparentColorIndex(): Int =
+            if (transparencyFlag()) transparentColorIndex else -1
     }
 }
