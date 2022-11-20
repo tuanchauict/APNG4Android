@@ -9,7 +9,6 @@ import java.io.InputStream
  * @CreateDate: 2019-05-23
  */
 open class FilterReader(
-    @JvmField
     protected var reader: Reader
 ) : Reader {
     @Throws(IOException::class)

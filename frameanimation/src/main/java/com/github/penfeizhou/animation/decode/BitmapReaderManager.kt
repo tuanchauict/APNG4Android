@@ -18,7 +18,6 @@ internal class BitmapReaderManager(private val loader: Loader) {
         return getReader()
     }
 
-    @Throws(IOException::class)
     fun closeReader() {
         try {
             reader?.close()

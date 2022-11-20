@@ -114,7 +114,9 @@ abstract class BaseFrameSeqDecoder(
     protected fun getCanvas(bitmap: Bitmap): Canvas =
         cachedCanvas.getOrPut(bitmap) { Canvas(bitmap) }
 
+    @WorkerThread
     private fun onFrame() {
+        println("Frame ${Thread.currentThread().name}")
         if (DEBUG) {
             Log.d(TAG, "$this#run")
         }
