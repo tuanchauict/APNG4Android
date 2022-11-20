@@ -124,7 +124,7 @@ internal class FCTLChunk(
         /**
          * blend_op` specifies whether the frame is to be alpha blended into the current output buffer content,
          * or whether it should completely replace its region in the output buffer.
-        ` */
+         ` */
         /**
          * All color components of the frame, including alpha, overwrite the current contents of the frame's output buffer region.
          */

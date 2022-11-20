@@ -10,7 +10,6 @@ import android.util.Size
 import com.github.penfeizhou.animation.decode.Frame
 import com.github.penfeizhou.animation.decode.FrameSeqDecoder2
 import com.github.penfeizhou.animation.decode.ImageInfo
-import com.github.penfeizhou.animation.decode.RenderListener
 import com.github.penfeizhou.animation.decode.area
 import com.github.penfeizhou.animation.io.ByteBufferWriter
 import com.github.penfeizhou.animation.io.FilterReader
